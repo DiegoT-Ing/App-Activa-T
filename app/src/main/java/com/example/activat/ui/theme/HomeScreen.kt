@@ -7,14 +7,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -59,7 +57,7 @@ fun HomeScreen(
                 )
             )
             .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+        verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
 
         // Header con saludo y logo animado
@@ -158,7 +156,7 @@ fun HomeScreen(
             }
         }
 
-        // Métricas rápidas con nuevos componentes
+        // Métricas rápidas CORREGIDAS - alineación fija
         AnimatedVisibility(
             visible = isVisible,
             enter = slideInVertically(
@@ -168,41 +166,131 @@ fun HomeScreen(
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                FitnessMetricCard(
-                    title = "Hoy",
-                    value = "$pasosTotalesDelDia",
-                    subtitle = "pasos",
-                    icon = "👣",
-                    color = FitnessGreen60,
+                // Card Hoy
+                Card(
                     modifier = Modifier.weight(1f),
+                    colors = CardDefaults.cardColors(
+                        containerColor = FitnessGreen60.copy(alpha = 0.1f)
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                    shape = RoundedCornerShape(16.dp),
                     onClick = { haptic.light() }
-                )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "👣",
+                            style = MaterialTheme.typography.headlineSmall
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Hoy",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "$pasosTotalesDelDia",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = FitnessGreen60
+                        )
+                        Text(
+                            text = "pasos",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
 
-                FitnessMetricCard(
-                    title = "Meta",
-                    value = "${usuarioData.metaPasosDiarios}",
-                    subtitle = "objetivo",
-                    icon = "🎯",
-                    color = TechBlue60,
+                // Card Meta
+                Card(
                     modifier = Modifier.weight(1f),
+                    colors = CardDefaults.cardColors(
+                        containerColor = TechBlue60.copy(alpha = 0.1f)
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                    shape = RoundedCornerShape(16.dp),
                     onClick = { haptic.light() }
-                )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "🎯",
+                            style = MaterialTheme.typography.headlineSmall
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Meta",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "${usuarioData.metaPasosDiarios}",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = TechBlue60
+                        )
+                        Text(
+                            text = "objetivo",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
 
-                FitnessMetricCard(
-                    title = "Restante",
-                    value = "${(usuarioData.metaPasosDiarios - pasosTotalesDelDia).coerceAtLeast(0)}",
-                    subtitle = "pasos",
-                    icon = "⚡",
-                    color = EnergyOrange60,
+                // Card Restante
+                Card(
                     modifier = Modifier.weight(1f),
+                    colors = CardDefaults.cardColors(
+                        containerColor = EnergyOrange60.copy(alpha = 0.1f)
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                    shape = RoundedCornerShape(16.dp),
                     onClick = { haptic.light() }
-                )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "⚡",
+                            style = MaterialTheme.typography.headlineSmall
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Restante",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "${(usuarioData.metaPasosDiarios - pasosTotalesDelDia).coerceAtLeast(0)}",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = EnergyOrange60
+                        )
+                        Text(
+                            text = "pasos",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
         }
 
-        // Última Sesión Card mejorada
+        // Última Sesión Card CORREGIDA - alineación fija
         AnimatedVisibility(
             visible = isVisible,
             enter = slideInVertically(
@@ -210,7 +298,159 @@ fun HomeScreen(
                 animationSpec = tween(1000, delayMillis = 500)
             ) + fadeIn(animationSpec = tween(1000, delayMillis = 500))
         ) {
-            EnhancedLastSessionCard(ultimaSesion = ultimaSesion, haptic = haptic)
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                shape = RoundedCornerShape(20.dp),
+                onClick = { haptic.light() }
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Última Actividad",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        if (ultimaSesion != null) {
+                            Surface(
+                                color = FitnessGreen60.copy(alpha = 0.2f),
+                                shape = CircleShape
+                            ) {
+                                Text(
+                                    text = "✓",
+                                    modifier = Modifier.padding(8.dp),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = FitnessGreen60,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    if (ultimaSesion != null) {
+                        // CORREGIDO: Row con espaciado uniforme
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Card(
+                                modifier = Modifier.weight(1f),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = FitnessGreen60.copy(alpha = 0.1f)
+                                ),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(12.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        text = "Pasos",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Text(
+                                        text = "${ultimaSesion!!.pasos}",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = FitnessGreen60
+                                    )
+                                }
+                            }
+
+                            Card(
+                                modifier = Modifier.weight(1f),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = TechBlue60.copy(alpha = 0.1f)
+                                ),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(12.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        text = "Tiempo",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Text(
+                                        text = ultimaSesion!!.tiempoFormateado(),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = TechBlue60
+                                    )
+                                }
+                            }
+
+                            Card(
+                                modifier = Modifier.weight(1f),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = EnergyOrange60.copy(alpha = 0.1f)
+                                ),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(12.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        text = "Distancia",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Text(
+                                        text = "%.1f km".format(ultimaSesion!!.distanciaKm),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = EnergyOrange60
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "🌟",
+                                style = MaterialTheme.typography.displayMedium
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "¡Tu primera aventura te espera!",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = FitnessGreen60
+                            )
+                            Text(
+                                text = "Cada paso cuenta hacia una vida más saludable",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
         }
 
         // Motivational Quote o Tip del día
@@ -277,108 +517,6 @@ private fun FitnessWelcomeHeader() {
                 text = "🏃‍♂️",
                 style = MaterialTheme.typography.headlineLarge
             )
-        }
-    }
-}
-
-@Composable
-private fun EnhancedLastSessionCard(
-    ultimaSesion: com.example.activat.data.SesionCaminata?,
-    haptic: HapticFeedbackHelper
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        shape = RoundedCornerShape(20.dp),
-        onClick = { haptic.light() }
-    ) {
-        Column(
-            modifier = Modifier.padding(20.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Última Actividad",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-
-                if (ultimaSesion != null) {
-                    Surface(
-                        color = FitnessGreen60.copy(alpha = 0.2f),
-                        shape = CircleShape
-                    ) {
-                        Text(
-                            text = "✓",
-                            modifier = Modifier.padding(8.dp),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = FitnessGreen60,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            if (ultimaSesion != null) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    FloatingMetric(
-                        label = "Pasos",
-                        value = "${ultimaSesion.pasos}",
-                        modifier = Modifier.weight(1f),
-                        backgroundColor = FitnessGreen60.copy(alpha = 0.1f),
-                        contentColor = FitnessGreen60
-                    )
-
-                    FloatingMetric(
-                        label = "Tiempo",
-                        value = ultimaSesion.tiempoFormateado(),
-                        modifier = Modifier.weight(1f),
-                        backgroundColor = TechBlue60.copy(alpha = 0.1f),
-                        contentColor = TechBlue60
-                    )
-
-                    FloatingMetric(
-                        label = "Distancia",
-                        value = "%.1f km".format(ultimaSesion.distanciaKm),
-                        modifier = Modifier.weight(1f),
-                        backgroundColor = EnergyOrange60.copy(alpha = 0.1f),
-                        contentColor = EnergyOrange60
-                    )
-                }
-            } else {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "🌟",
-                        style = MaterialTheme.typography.displayMedium
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "¡Tu primera aventura te espera!",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = FitnessGreen60
-                    )
-                    Text(
-                        text = "Cada paso cuenta hacia una vida más saludable",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
         }
     }
 }

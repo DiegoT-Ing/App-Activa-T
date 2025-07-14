@@ -8,17 +8,22 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Build
 import android.widget.Toast
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import com.example.activat.ui.theme.components.IndicadorMetaPasos
-import com.example.activat.ui.theme.components.LiveSessionMetrics
-import com.example.activat.ui.theme.components.rememberHapticFeedback
+import com.example.activat.ui.theme.components.*
 import com.example.activat.viewmodel.ActivaTViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
@@ -38,11 +43,18 @@ fun CaminataScreen(
     val pasosEnSesionActual by viewModel.pasosEnSesionActual.collectAsStateWithLifecycle()
     val tiempoSesionActual by viewModel.tiempoSesionActual.collectAsStateWithLifecycle()
     val caminataActiva by viewModel.caminataActiva.collectAsStateWithLifecycle()
+    val porcentajeMetaAlcanzado by viewModel.porcentajeMetaAlcanzado.collectAsStateWithLifecycle()
 
     // Estados locales para la UI
     var isPaused by remember { mutableStateOf(false) }
     var showDialog by remember { mutableStateOf(false) }
     var stepsAtStart by remember { mutableFloatStateOf(0f) }
+    var isVisible by remember { mutableStateOf(false) }
+
+    // Animaciones de entrada
+    LaunchedEffect(Unit) {
+        isVisible = true
+    }
 
     val permissionGranted = remember {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -60,7 +72,7 @@ fun CaminataScreen(
         if (autoStart && !caminataActiva) {
             stepsAtStart = 0f
             viewModel.iniciarCaminata()
-            haptic.start() // Feedback háptico al iniciar
+            haptic.start()
         }
     }
 
@@ -109,153 +121,357 @@ fun CaminataScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(32.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // Título dinámico
-        Text(
-            text = if (caminataActiva) {
-                if (isPaused) "Sesión pausada" else "¡Caminando!"
-            } else {
-                "Listo para caminar"
-            },
-            style = MaterialTheme.typography.headlineMedium,
-            color = if (caminataActiva && !isPaused) {
-                MaterialTheme.colorScheme.primary
-            } else {
-                MaterialTheme.colorScheme.onSurface
-            }
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Métricas de la sesión usando componente reutilizable
-        if (caminataActiva) {
-            LiveSessionMetrics(
-                pasosEnSesion = pasosEnSesionActual,
-                tiempoSesion = tiempoSesionActual
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        if (caminataActiva && !isPaused) FitnessGreen80.copy(alpha = 0.15f) else NeutralGray95,
+                        MaterialTheme.colorScheme.surface
+                    )
+                )
             )
+            .padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(24.dp)
+    ) {
 
-            Spacer(modifier = Modifier.height(24.dp))
+        // Título dinámico con animación
+        AnimatedVisibility(
+            visible = isVisible,
+            enter = slideInVertically(
+                initialOffsetY = { -it },
+                animationSpec = tween(600)
+            ) + fadeIn(animationSpec = tween(600))
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = if (caminataActiva) {
+                        if (isPaused) "⏸️ Sesión Pausada" else "🏃‍♂️ ¡Caminando!"
+                    } else {
+                        "🚀 Listo para Caminar"
+                    },
+                    style = MaterialTheme.typography.headlineLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = if (caminataActiva && !isPaused) {
+                        FitnessGreen60
+                    } else {
+                        MaterialTheme.colorScheme.onSurface
+                    }
+                )
+
+                if (caminataActiva) {
+                    Text(
+                        text = if (isPaused) "Toca Reanudar para continuar" else "¡Sigue así!",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
         }
 
-        // Indicador de progreso total del día
-        IndicadorMetaPasos(
-            currentSteps = pasosTotalesDelDia.toFloat(),
-            metaPasos = usuarioData.metaPasosDiarios.toFloat()
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text(
-            text = "Progreso total del día: $pasosTotalesDelDia pasos",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        // Botones de control
-        if (!caminataActiva) {
-            Button(
-                onClick = {
-                    haptic.start()
-                    stepsAtStart = 0f
-                    viewModel.iniciarCaminata()
-                    isPaused = false
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Iniciar caminata")
-            }
-        } else {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Button(
-                    onClick = {
-                        haptic.medium()
-                        isPaused = !isPaused
-                    },
-                    modifier = Modifier.weight(1f),
-                    colors = if (isPaused) {
-                        ButtonDefaults.buttonColors()
-                    } else {
-                        ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.secondary
-                        )
-                    }
-                ) {
-                    Text(if (isPaused) "Reanudar" else "Pausar")
+        // Indicador de progreso principal con nueva identidad
+        AnimatedVisibility(
+            visible = isVisible,
+            enter = slideInVertically(
+                initialOffsetY = { it },
+                animationSpec = tween(700, delayMillis = 200)
+            ) + fadeIn(animationSpec = tween(700, delayMillis = 200))
+        ) {
+            FitnessGradientCard(
+                colors = if (caminataActiva && !isPaused) {
+                    FitnessGradients.SuccessGradient
+                } else {
+                    listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary)
                 }
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Progreso Total del Día",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
 
-                Button(
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    ProgressRing(
+                        progress = porcentajeMetaAlcanzado,
+                        size = 140.dp,
+                        strokeWidth = 12.dp,
+                        progressColor = Color.White,
+                        backgroundColor = Color.White.copy(alpha = 0.3f)
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        text = "$pasosTotalesDelDia pasos",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                    Text(
+                        text = "Meta: ${usuarioData.metaPasosDiarios} pasos",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Color.White.copy(alpha = 0.8f)
+                    )
+                }
+            }
+        }
+
+        // Métricas de la sesión actual
+        if (caminataActiva) {
+            AnimatedVisibility(
+                visible = isVisible,
+                enter = slideInVertically(
+                    initialOffsetY = { it },
+                    animationSpec = tween(800, delayMillis = 300)
+                ) + fadeIn(animationSpec = tween(800, delayMillis = 300))
+            ) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (isPaused) {
+                            EnergyOrange60.copy(alpha = 0.1f)
+                        } else {
+                            FitnessGreen60.copy(alpha = 0.1f)
+                        }
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Sesión Actual",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceEvenly
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = "👣",
+                                    style = MaterialTheme.typography.headlineMedium
+                                )
+                                AnimatedCounter(
+                                    targetValue = pasosEnSesionActual,
+                                    textStyle = MaterialTheme.typography.headlineLarge,
+                                    color = FitnessGreen60
+                                )
+                                Text(
+                                    text = "Pasos",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = "⏱️",
+                                    style = MaterialTheme.typography.headlineMedium
+                                )
+                                Text(
+                                    text = formatTime(tiempoSesionActual),
+                                    style = MaterialTheme.typography.headlineLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = TechBlue60
+                                )
+                                Text(
+                                    text = "Tiempo",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Botones de control con nueva identidad
+        AnimatedVisibility(
+            visible = isVisible,
+            enter = slideInVertically(
+                initialOffsetY = { it },
+                animationSpec = tween(900, delayMillis = 400)
+            ) + fadeIn(animationSpec = tween(900, delayMillis = 400))
+        ) {
+            if (!caminataActiva) {
+                PulsingButton(
                     onClick = {
-                        haptic.strong()
-                        showDialog = true
+                        haptic.start()
+                        stepsAtStart = 0f
+                        viewModel.iniciarCaminata()
+                        isPaused = false
                     },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(64.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error
+                        containerColor = FitnessGreen60
                     )
                 ) {
-                    Text("Detener")
+                    Text(
+                        text = "🚀 Iniciar Caminata",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+            } else {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Button(
+                        onClick = {
+                            haptic.medium()
+                            isPaused = !isPaused
+                        },
+                        modifier = Modifier.weight(1f).height(56.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isPaused) FitnessGreen60 else EnergyOrange60
+                        ),
+                        shape = RoundedCornerShape(28.dp)
+                    ) {
+                        Text(
+                            text = if (isPaused) "▶️ Reanudar" else "⏸️ Pausar",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+
+                    Button(
+                        onClick = {
+                            haptic.strong()
+                            showDialog = true
+                        },
+                        modifier = Modifier.weight(1f).height(56.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = HealthCritical
+                        ),
+                        shape = RoundedCornerShape(28.dp)
+                    ) {
+                        Text(
+                            text = "⏹️ Detener",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
                 }
             }
         }
 
-        // Información de estado
+        // Información de estado mejorada
         if (caminataActiva && isPaused) {
-            Spacer(modifier = Modifier.height(16.dp))
-            Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer
-                )
+            AnimatedVisibility(
+                visible = true,
+                enter = slideInVertically() + fadeIn()
             ) {
-                Text(
-                    text = "⏸️ Sesión pausada - Presiona Reanudar para continuar",
-                    modifier = Modifier.padding(12.dp),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer
-                )
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = EnergyOrange60.copy(alpha = 0.1f)
+                    ),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "⏸️",
+                            style = MaterialTheme.typography.headlineSmall
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                text = "Sesión Pausada",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = EnergyOrange60
+                            )
+                            Text(
+                                text = "Presiona Reanudar para continuar tu progreso",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
             }
         }
     }
 
-    // Dialog de confirmación optimizado
+    // Dialog de confirmación mejorado
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
             confirmButton = {
-                TextButton(onClick = {
-                    haptic.success()
-                    viewModel.detenerCaminata()
-                    showDialog = false
-                    isPaused = false
-                    onFinalizar()
-                }) {
-                    Text("Sí, guardar y finalizar")
+                Button(
+                    onClick = {
+                        haptic.success()
+                        viewModel.detenerCaminata()
+                        showDialog = false
+                        isPaused = false
+                        onFinalizar()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = FitnessGreen60
+                    )
+                ) {
+                    Text("✓ Sí, guardar")
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDialog = false }) {
-                    Text("Continuar caminando")
+                    Text("Continuar")
                 }
             },
-            title = { Text("¿Finalizar sesión?") },
+            title = {
+                Text(
+                    text = "🏁 ¿Finalizar sesión?",
+                    fontWeight = FontWeight.Bold
+                )
+            },
             text = {
-                Column {
-                    Text("Tu progreso se guardará automáticamente:")
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "• $pasosEnSesionActual pasos\n• ${com.example.activat.ui.theme.components.formatTime(tiempoSesionActual)}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = FitnessGreen60.copy(alpha = 0.1f)
                     )
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text("Tu progreso se guardará automáticamente:")
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "👣 $pasosEnSesionActual pasos",
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Medium,
+                                color = FitnessGreen60
+                            )
+                            Text(
+                                text = "⏱️ ${formatTime(tiempoSesionActual)}",
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Medium,
+                                color = TechBlue60
+                            )
+                        }
+                    }
                 }
-            }
+            },
+            shape = RoundedCornerShape(20.dp)
         )
     }
 }

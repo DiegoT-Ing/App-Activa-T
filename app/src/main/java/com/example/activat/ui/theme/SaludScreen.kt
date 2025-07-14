@@ -1,17 +1,21 @@
 package com.example.activat.ui.theme
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.example.activat.ui.theme.components.FitnessGradientCard
+import com.example.activat.ui.theme.components.AnimatedCounter
 import com.example.activat.viewmodel.ActivaTViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlin.math.pow
@@ -24,6 +28,12 @@ fun SaludScreen(viewModel: ActivaTViewModel) {
     // Estados locales sincronizados con el ViewModel
     var actividadFisica by remember { mutableStateOf("Sedentario") }
     var objetivoSalud by remember { mutableStateOf("Mantener peso") }
+    var isVisible by remember { mutableStateOf(false) }
+
+    // Animación de entrada
+    LaunchedEffect(Unit) {
+        isVisible = true
+    }
 
     // Sincronizar con datos del ViewModel
     LaunchedEffect(configuracionSalud) {
@@ -46,44 +56,85 @@ fun SaludScreen(viewModel: ActivaTViewModel) {
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         item {
-            Text(
-                text = "Centro de Salud",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold
-            )
+            AnimatedVisibility(
+                visible = isVisible,
+                enter = slideInVertically(
+                    initialOffsetY = { -it },
+                    animationSpec = tween(600)
+                ) + fadeIn(animationSpec = tween(600))
+            ) {
+                Text(
+                    text = "💊 Centro de Salud",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = FitnessGreen60
+                )
+            }
         }
 
-        // IMC Calculator
+        // IMC Calculator con nueva identidad
         item {
-            IMCCard(
-                estatura = usuarioData.estatura,
-                peso = usuarioData.peso
-            )
+            AnimatedVisibility(
+                visible = isVisible,
+                enter = slideInVertically(
+                    initialOffsetY = { it },
+                    animationSpec = tween(700, delayMillis = 100)
+                ) + fadeIn(animationSpec = tween(700, delayMillis = 100))
+            ) {
+                IMCCard(
+                    estatura = usuarioData.estatura,
+                    peso = usuarioData.peso
+                )
+            }
         }
 
         // Metabolismo Basal
         item {
-            MetabolismoBasalCard(
-                edad = usuarioData.edad,
-                estatura = usuarioData.estatura,
-                peso = usuarioData.peso,
-                actividadFisica = actividadFisica,
-                onActividadChange = { actividadFisica = it }
-            )
+            AnimatedVisibility(
+                visible = isVisible,
+                enter = slideInVertically(
+                    initialOffsetY = { it },
+                    animationSpec = tween(800, delayMillis = 200)
+                ) + fadeIn(animationSpec = tween(800, delayMillis = 200))
+            ) {
+                MetabolismoBasalCard(
+                    edad = usuarioData.edad,
+                    estatura = usuarioData.estatura,
+                    peso = usuarioData.peso,
+                    actividadFisica = actividadFisica,
+                    onActividadChange = { actividadFisica = it }
+                )
+            }
         }
 
         // Agua Diaria
         item {
-            AguaDiariaCard(peso = usuarioData.peso)
+            AnimatedVisibility(
+                visible = isVisible,
+                enter = slideInVertically(
+                    initialOffsetY = { it },
+                    animationSpec = tween(900, delayMillis = 300)
+                ) + fadeIn(animationSpec = tween(900, delayMillis = 300))
+            ) {
+                AguaDiariaCard(peso = usuarioData.peso)
+            }
         }
 
         // Objetivos de Salud
         item {
-            ObjetivosSaludCard(
-                objetivoSalud = objetivoSalud,
-                onObjetivoChange = { objetivoSalud = it },
-                pesoActual = usuarioData.peso
-            )
+            AnimatedVisibility(
+                visible = isVisible,
+                enter = slideInVertically(
+                    initialOffsetY = { it },
+                    animationSpec = tween(1000, delayMillis = 400)
+                ) + fadeIn(animationSpec = tween(1000, delayMillis = 400))
+            ) {
+                ObjetivosSaludCard(
+                    objetivoSalud = objetivoSalud,
+                    onObjetivoChange = { objetivoSalud = it },
+                    pesoActual = usuarioData.peso
+                )
+            }
         }
     }
 }
@@ -94,80 +145,55 @@ private fun IMCCard(estatura: Float, peso: Float) {
         peso / (estatura / 100).pow(2)
     } else 0f
 
-    val categoria = when {
-        imc < 18.5 -> "Bajo peso" to MaterialTheme.colorScheme.primary
-        imc < 25 -> "Normal" to MaterialTheme.colorScheme.tertiary
-        imc < 30 -> "Sobrepeso" to MaterialTheme.colorScheme.secondary
-        else -> "Obesidad" to MaterialTheme.colorScheme.error
+    val (categoria, color) = when {
+        imc < 18.5 -> "Bajo peso" to TechBlue60
+        imc < 25 -> "Normal" to FitnessGreen60
+        imc < 30 -> "Sobrepeso" to EnergyOrange60
+        else -> "Obesidad" to HealthCritical
     }
 
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
+    FitnessGradientCard(
+        colors = listOf(color.copy(alpha = 0.8f), color)
     ) {
-        Column(modifier = Modifier.padding(20.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.MonitorWeight,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = "Índice de Masa Corporal",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(
+                    text = "⚖️ Índice de Masa Corporal",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = categoria,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color.White.copy(alpha = 0.9f)
+                )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
             if (imc > 0) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column {
-                        Text(
-                            text = "%.1f".format(imc),
-                            style = MaterialTheme.typography.headlineLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = categoria.second
-                        )
-                        Text(
-                            text = "IMC",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            text = categoria.first,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = categoria.second
-                        )
-                        Text(
-                            text = "Categoría",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                Column(horizontalAlignment = Alignment.End) {
+                    AnimatedCounter(
+                        targetValue = imc.toInt(),
+                        textStyle = MaterialTheme.typography.displaySmall,
+                        color = Color.White,
+                        suffix = ".${((imc % 1) * 10).toInt()}"
+                    )
+                    Text(
+                        text = "IMC",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Color.White.copy(alpha = 0.8f)
+                    )
                 }
             } else {
                 Text(
-                    text = "⚠️ Completa tu peso y estatura en Usuario",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text = "⚠️ Completa tu peso y estatura",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Color.White.copy(alpha = 0.9f)
                 )
             }
         }
@@ -198,95 +224,102 @@ private fun MetabolismoBasalCard(
 
     val caloriasTotal = tmb * factorActividad
 
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-        )
+    FitnessGradientCard(
+        colors = FitnessGradients.EnergyGradient
     ) {
-        Column(modifier = Modifier.padding(20.dp)) {
+        Column {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Default.LocalFireDepartment,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                Text(
+                    text = "🔥",
+                    style = MaterialTheme.typography.headlineMedium
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
                     text = "Metabolismo Basal",
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                    color = Color.White
                 )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             if (tmb > 0) {
-                Column {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Column {
-                            Text(
-                                text = "${tmb.toInt()}",
-                                style = MaterialTheme.typography.headlineMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                            Text(
-                                text = "TMB (kcal/día)",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                        }
-
-                        Column(horizontalAlignment = Alignment.End) {
-                            Text(
-                                text = "${caloriasTotal.toInt()}",
-                                style = MaterialTheme.typography.headlineMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                            Text(
-                                text = "Total diario",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                        }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column {
+                        AnimatedCounter(
+                            targetValue = tmb.toInt(),
+                            textStyle = MaterialTheme.typography.headlineLarge,
+                            color = Color.White
+                        )
+                        Text(
+                            text = "TMB (kcal/día)",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.White.copy(alpha = 0.8f)
+                        )
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Column(horizontalAlignment = Alignment.End) {
+                        AnimatedCounter(
+                            targetValue = caloriasTotal.toInt(),
+                            textStyle = MaterialTheme.typography.headlineLarge,
+                            color = Color.White
+                        )
+                        Text(
+                            text = "Total diario",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.White.copy(alpha = 0.8f)
+                        )
+                    }
+                }
 
-                    Text(
-                        text = "Nivel de actividad:",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
+                Spacer(modifier = Modifier.height(16.dp))
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Nivel de actividad:",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.White
+                )
 
-                    val opciones = listOf("Sedentario", "Ligero", "Moderado", "Activo", "Muy Activo")
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        opciones.take(3).forEach { opcion ->
-                            FilterChip(
-                                onClick = { onActividadChange(opcion) },
-                                label = { Text(opcion, style = MaterialTheme.typography.labelSmall) },
-                                selected = actividadFisica == opcion,
-                                modifier = Modifier.weight(1f)
-                            )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                val opciones = listOf("Sedentario", "Ligero", "Moderado", "Activo", "Muy Activo")
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    opciones.chunked(3).forEach { chunk ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            chunk.forEach { opcion ->
+                                FilterChip(
+                                    onClick = { onActividadChange(opcion) },
+                                    label = {
+                                        Text(
+                                            opcion,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    },
+                                    selected = actividadFisica == opcion,
+                                    modifier = Modifier.weight(1f),
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = Color.White.copy(alpha = 0.2f),
+                                        selectedLabelColor = Color.White
+                                    )
+                                )
+                            }
                         }
                     }
                 }
             } else {
                 Text(
                     text = "⚠️ Completa tus datos en Usuario",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Color.White.copy(alpha = 0.9f)
                 )
             }
         }
@@ -301,22 +334,23 @@ private fun AguaDiariaCard(peso: Float) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.tertiaryContainer
-        )
+            containerColor = TechBlue60.copy(alpha = 0.1f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        shape = RoundedCornerShape(20.dp)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Default.Water,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onTertiaryContainer
+                Text(
+                    text = "💧",
+                    style = MaterialTheme.typography.headlineMedium
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
                     text = "Hidratación Diaria",
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                    color = TechBlue60
                 )
             }
 
@@ -328,38 +362,47 @@ private fun AguaDiariaCard(peso: Float) {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column {
+                        // Este es el bloque que debes modificar
+                        Row { // <-- Quita 'verticalAlignment = Alignment.Baseline' de aquí
+                            AnimatedCounter(
+                                targetValue = aguaRecomendada.toInt(),
+                                textStyle = MaterialTheme.typography.displayMedium,
+                                color = TechBlue60,
+                                modifier = Modifier.alignByBaseline() // <-- Añade este modificador
+                            )
+                            Text(
+                                text = ".${((aguaRecomendada % 1) * 10).toInt()} L",
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = TechBlue60,
+                                modifier = Modifier.alignByBaseline() // <-- Añade este modificador
+                            )
+                        }
                         Text(
-                            text = "%.1f L".format(aguaRecomendada),
-                            style = MaterialTheme.typography.headlineLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onTertiaryContainer
-                        )
-                        Text(
-                            text = "Agua diaria",
+                            text = "Agua diaria recomendada",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onTertiaryContainer
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
 
                     Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            text = "${(aguaRecomendada * 4).toInt()}",
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onTertiaryContainer
+                        AnimatedCounter(
+                            targetValue = (aguaRecomendada * 4).toInt(),
+                            textStyle = MaterialTheme.typography.displaySmall,
+                            color = TechBlue60
                         )
                         Text(
                             text = "Vasos aprox.",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onTertiaryContainer
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
             } else {
                 Text(
                     text = "⚠️ Ingresa tu peso en Usuario",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -375,56 +418,92 @@ private fun ObjetivosSaludCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.secondaryContainer
-        )
+            containerColor = MotivationPurple60.copy(alpha = 0.1f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        shape = RoundedCornerShape(20.dp)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Default.Flag,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer
+                Text(
+                    text = "🎯",
+                    style = MaterialTheme.typography.headlineMedium
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
                     text = "Objetivos de Salud",
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                    color = MotivationPurple60
                 )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            val objetivos = listOf("Perder peso", "Mantener peso", "Ganar masa")
+            val objetivos = listOf(
+                "Perder peso" to "🔽",
+                "Mantener peso" to "⚖️",
+                "Ganar masa" to "🔼"
+            )
 
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                objetivos.forEach { objetivo ->
-                    Row(
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                objetivos.forEach { (objetivo, emoji) ->
+                    Card(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (objetivoSalud == objetivo) {
+                                MotivationPurple60.copy(alpha = 0.2f)
+                            } else {
+                                MaterialTheme.colorScheme.surface
+                            }
+                        ),
+                        onClick = { onObjetivoChange(objetivo) }
                     ) {
-                        RadioButton(
-                            selected = objetivoSalud == objetivo,
-                            onClick = { onObjetivoChange(objetivo) }
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = objetivo,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer
-                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = objetivoSalud == objetivo,
+                                onClick = { onObjetivoChange(objetivo) },
+                                colors = RadioButtonDefaults.colors(
+                                    selectedColor = MotivationPurple60
+                                )
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                text = emoji,
+                                style = MaterialTheme.typography.headlineSmall
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = objetivo,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = if (objetivoSalud == objetivo) FontWeight.Bold else FontWeight.Normal,
+                                color = if (objetivoSalud == objetivo) MotivationPurple60 else MaterialTheme.colorScheme.onSurface
+                            )
+                        }
                     }
                 }
             }
 
             if (pesoActual > 0) {
-                Spacer(modifier = Modifier.height(12.dp))
-                Text(
-                    text = "💡 ${getRecomendacion(objetivoSalud)}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer
-                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = MotivationPurple60.copy(alpha = 0.05f)
+                    )
+                ) {
+                    Text(
+                        text = "💡 ${getRecomendacion(objetivoSalud)}",
+                        modifier = Modifier.padding(12.dp),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MotivationPurple60,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
         }
     }

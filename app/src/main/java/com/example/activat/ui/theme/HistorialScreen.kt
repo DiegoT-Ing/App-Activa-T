@@ -42,7 +42,8 @@ fun HistorialScreen(viewModel: ActivaTViewModel) {
             Text(
                 text = "Historial de Actividad",
                 style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
 
@@ -82,17 +83,15 @@ fun HistorialScreen(viewModel: ActivaTViewModel) {
             }
         }
 
-        // Gráfica dinámica (nueva)
-        if (sesionesFiltradas.isNotEmpty()) {
-            item {
-                StepsChart(
-                    sesiones = sesionesFiltradas,
-                    periodo = periodoSeleccionado
-                )
-            }
+        // CORREGIDO: Mostrar gráfica siempre, con estado vacío si no hay datos
+        item {
+            StepsChart(
+                sesiones = sesionesFiltradas,
+                periodo = periodoSeleccionado
+            )
         }
 
-        // Resumen estadístico mejorado
+        // Resumen estadístico mejorado - Solo si hay datos
         if (sesionesFiltradas.isNotEmpty()) {
             item {
                 val totalPasos = sesionesFiltradas.sumOf { it.pasos }
@@ -103,7 +102,7 @@ fun HistorialScreen(viewModel: ActivaTViewModel) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                        containerColor = FitnessGreen60.copy(alpha = 0.1f)
                     ),
                     elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
                 ) {
@@ -112,55 +111,57 @@ fun HistorialScreen(viewModel: ActivaTViewModel) {
                             text = "📊 Resumen del ${periodoSeleccionado.lowercase()}",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                            color = FitnessGreen60
                         )
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        // Grid de estadísticas
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            StatsCard(
-                                title = "Total",
-                                value = "$totalPasos",
-                                subtitle = "pasos",
-                                modifier = Modifier.weight(1f)
-                            )
-                            StatsCard(
-                                title = "Promedio",
-                                value = "$promedioPasos",
-                                subtitle = "pasos/día",
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
+                        // Grid de estadísticas CORREGIDO
+                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                StatsCard(
+                                    title = "Total",
+                                    value = "$totalPasos",
+                                    subtitle = "pasos",
+                                    modifier = Modifier.weight(1f),
+                                    color = FitnessGreen60
+                                )
+                                StatsCard(
+                                    title = "Promedio",
+                                    value = "$promedioPasos",
+                                    subtitle = "pasos/día",
+                                    modifier = Modifier.weight(1f),
+                                    color = TechBlue60
+                                )
+                            }
 
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            StatsCard(
-                                title = "Distancia",
-                                value = "${"%.1f".format(totalDistancia)}",
-                                subtitle = "km",
-                                modifier = Modifier.weight(1f)
-                            )
-                            StatsCard(
-                                title = "Sesiones",
-                                value = "${sesionesFiltradas.size}",
-                                subtitle = "completadas",
-                                modifier = Modifier.weight(1f)
-                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                StatsCard(
+                                    title = "Distancia",
+                                    value = "%.1f".format(totalDistancia),
+                                    subtitle = "km",
+                                    modifier = Modifier.weight(1f),
+                                    color = EnergyOrange60
+                                )
+                                StatsCard(
+                                    title = "Sesiones",
+                                    value = "${sesionesFiltradas.size}",
+                                    subtitle = "completadas",
+                                    modifier = Modifier.weight(1f),
+                                    color = MotivationPurple60
+                                )
+                            }
                         }
                     }
                 }
             }
-        }
 
-        // Lista de sesiones individuales mejorada
-        if (sesionesFiltradas.isNotEmpty()) {
+            // Lista de sesiones individuales mejorada
             item {
                 Text(
                     text = "Sesiones detalladas:",
@@ -176,7 +177,7 @@ fun HistorialScreen(viewModel: ActivaTViewModel) {
                 )
             }
         } else {
-            // Estado vacío mejorado
+            // CORREGIDO: Estado vacío mejorado cuando no hay sesiones
             item {
                 EmptyHistoryState()
             }
@@ -189,17 +190,20 @@ private fun StatsCard(
     title: String,
     value: String,
     subtitle: String,
+    color: androidx.compose.ui.graphics.Color,
     modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = color.copy(alpha = 0.1f)
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
@@ -211,7 +215,7 @@ private fun StatsCard(
                 text = value,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = color
             )
             Text(
                 text = subtitle,
@@ -253,24 +257,27 @@ private fun SessionCard(
                     )
                 }
 
-                // Métricas principales
+                // Métricas principales - CORREGIDO
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(24.dp)
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     MetricColumn(
                         value = "${sesion.pasos}",
                         label = "pasos",
-                        icon = "👣"
+                        icon = "👣",
+                        color = FitnessGreen60
                     )
                     MetricColumn(
                         value = sesion.tiempoFormateado(),
                         label = "tiempo",
-                        icon = "⏱️"
+                        icon = "⏱️",
+                        color = TechBlue60
                     )
                     MetricColumn(
-                        value = "${"%.2f".format(sesion.distanciaKm)}",
+                        value = "%.2f".format(sesion.distanciaKm),
                         label = "km",
-                        icon = "📍"
+                        icon = "📍",
+                        color = EnergyOrange60
                     )
                 }
             }
@@ -294,7 +301,7 @@ private fun SessionCard(
                             text = "${(progreso * 100).toInt()}%",
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.primary
+                            color = getProgressColor(progreso)
                         )
                     }
 
@@ -303,6 +310,7 @@ private fun SessionCard(
                     LinearProgressIndicator(
                         progress = { progreso },
                         modifier = Modifier.fillMaxWidth(),
+                        color = getProgressColor(progreso),
                         trackColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
                     )
                 }
@@ -315,7 +323,8 @@ private fun SessionCard(
 private fun MetricColumn(
     value: String,
     label: String,
-    icon: String
+    icon: String,
+    color: androidx.compose.ui.graphics.Color
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
@@ -324,9 +333,9 @@ private fun MetricColumn(
         )
         Text(
             text = value,
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
+            color = color
         )
         Text(
             text = label,
@@ -367,5 +376,15 @@ private fun EmptyHistoryState() {
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+    }
+}
+
+// Función helper para obtener color según progreso
+private fun getProgressColor(progress: Float): androidx.compose.ui.graphics.Color {
+    return when {
+        progress >= 0.9f -> FitnessGreen40
+        progress >= 0.7f -> FitnessGreen60
+        progress >= 0.4f -> EnergyOrange60
+        else -> HealthCritical
     }
 }
