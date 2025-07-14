@@ -74,25 +74,25 @@ class ActivaTViewModel(private val repository: ActivaTRepository) : ViewModel() 
     }
 
     private fun cargarDatos() {
+        // Optimización: usar una sola corrutina con múltiples flows
         viewModelScope.launch {
-            // Cargar datos del usuario
-            repository.usuarioDataFlow.collect { userData ->
-                _usuarioData.value = userData
+            launch {
+                repository.usuarioDataFlow.collect { userData ->
+                    _usuarioData.value = userData
+                }
             }
-        }
 
-        viewModelScope.launch {
-            // Cargar datos del día
-            repository.datosDelDiaFlow.collect { datosDelDia ->
-                _datosDelDia.value = datosDelDia
+            launch {
+                repository.datosDelDiaFlow.collect { datosDelDia ->
+                    _datosDelDia.value = datosDelDia
+                }
             }
-        }
 
-        viewModelScope.launch {
-            // Cargar historial
-            repository.obtenerHistorialSesiones().collect { sesiones ->
-                _historialSesiones.value = sesiones
-                _ultimaSesion.value = sesiones.maxByOrNull { it.fecha }
+            launch {
+                repository.obtenerHistorialSesiones().collect { sesiones ->
+                    _historialSesiones.value = sesiones
+                    _ultimaSesion.value = sesiones.maxByOrNull { it.fecha }
+                }
             }
         }
     }
@@ -187,7 +187,6 @@ class ActivaTViewModel(private val repository: ActivaTRepository) : ViewModel() 
         }
     }
 }
-
 
 class ActivaTViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
