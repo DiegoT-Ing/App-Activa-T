@@ -17,6 +17,7 @@ import com.example.activat.viewmodel.ActivaTViewModelFactory
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.ui.Modifier
 import androidx.compose.runtime.mutableIntStateOf
 import android.Manifest
@@ -63,6 +64,7 @@ fun ActivaTApp(viewModel: ActivaTViewModel) {
     val items = listOf(
         NavItem("Home", Icons.Default.Home, "home"),
         NavItem("Historial", Icons.Default.History, "historial"),
+        NavItem("Salud", Icons.Default.Favorite, "salud"),
         NavItem("Usuario", Icons.Default.Person, "usuario")
     )
 

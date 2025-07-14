@@ -31,6 +31,9 @@ fun NavigationGraph(
         composable("historial") {
             HistorialScreen(viewModel = viewModel)
         }
+        composable("salud") {
+            SaludScreen(viewModel = viewModel)
+        }
         composable("usuario") {
             UsuarioScreen(viewModel = viewModel)
         }
