@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.example.activat.ui.theme.components.IndicadorMetaPasos
 import com.example.activat.ui.theme.components.LiveSessionMetrics
+import com.example.activat.ui.theme.components.rememberHapticFeedback
 import com.example.activat.viewmodel.ActivaTViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
@@ -29,6 +30,7 @@ fun CaminataScreen(
     onFinalizar: () -> Unit
 ) {
     val context = LocalContext.current
+    val haptic = rememberHapticFeedback()
 
     // Estados del ViewModel
     val usuarioData by viewModel.usuarioData.collectAsStateWithLifecycle()
@@ -58,6 +60,7 @@ fun CaminataScreen(
         if (autoStart && !caminataActiva) {
             stepsAtStart = 0f
             viewModel.iniciarCaminata()
+            haptic.start() // Feedback háptico al iniciar
         }
     }
 
@@ -157,6 +160,7 @@ fun CaminataScreen(
         if (!caminataActiva) {
             Button(
                 onClick = {
+                    haptic.start()
                     stepsAtStart = 0f
                     viewModel.iniciarCaminata()
                     isPaused = false
@@ -171,7 +175,10 @@ fun CaminataScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Button(
-                    onClick = { isPaused = !isPaused },
+                    onClick = {
+                        haptic.medium()
+                        isPaused = !isPaused
+                    },
                     modifier = Modifier.weight(1f),
                     colors = if (isPaused) {
                         ButtonDefaults.buttonColors()
@@ -185,7 +192,10 @@ fun CaminataScreen(
                 }
 
                 Button(
-                    onClick = { showDialog = true },
+                    onClick = {
+                        haptic.strong()
+                        showDialog = true
+                    },
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.error
@@ -220,6 +230,7 @@ fun CaminataScreen(
             onDismissRequest = { showDialog = false },
             confirmButton = {
                 TextButton(onClick = {
+                    haptic.success()
                     viewModel.detenerCaminata()
                     showDialog = false
                     isPaused = false

@@ -28,6 +28,10 @@ class ActivaTRepository(private val context: Context) {
         val PASOS_ACUMULADOS = intPreferencesKey("pasos_acumulados")
         val SESIONES_REALIZADAS = intPreferencesKey("sesiones_realizadas")
 
+        // Configuración Salud
+        val ACTIVIDAD_FISICA = stringPreferencesKey("actividad_fisica")
+        val OBJETIVO_SALUD = stringPreferencesKey("objetivo_salud")
+
         // Configuración
         val PRIMER_USO = booleanPreferencesKey("primer_uso")
         val ULTIMA_ACTUALIZACION = stringPreferencesKey("ultima_actualizacion")
@@ -45,6 +49,16 @@ class ActivaTRepository(private val context: Context) {
                 estatura = preferences[PreferencesKeys.ESTATURA] ?: 0f,
                 peso = preferences[PreferencesKeys.PESO] ?: 0f,
                 metaPasosDiarios = preferences[PreferencesKeys.META_PASOS] ?: 6000
+            )
+        }
+
+    // Flow para configuración de salud
+    val configuracionSaludFlow: Flow<ConfiguracionSalud> = context.dataStore.data
+        .catch { emit(emptyPreferences()) }
+        .map { preferences ->
+            ConfiguracionSalud(
+                actividadFisica = preferences[PreferencesKeys.ACTIVIDAD_FISICA] ?: "Sedentario",
+                objetivoSalud = preferences[PreferencesKeys.OBJETIVO_SALUD] ?: "Mantener peso"
             )
         }
 
@@ -78,6 +92,14 @@ class ActivaTRepository(private val context: Context) {
             preferences[PreferencesKeys.ESTATURA] = usuario.estatura
             preferences[PreferencesKeys.PESO] = usuario.peso
             preferences[PreferencesKeys.META_PASOS] = usuario.metaPasosDiarios
+        }
+    }
+
+    // Guardar configuración de salud
+    suspend fun guardarConfiguracionSalud(configuracion: ConfiguracionSalud) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.ACTIVIDAD_FISICA] = configuracion.actividadFisica
+            preferences[PreferencesKeys.OBJETIVO_SALUD] = configuracion.objetivoSalud
         }
     }
 

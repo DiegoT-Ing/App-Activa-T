@@ -24,6 +24,7 @@ import androidx.navigation.NavHostController
 import com.example.activat.ui.theme.components.AnimatedProgressCard
 import com.example.activat.ui.theme.components.StatsCard
 import com.example.activat.ui.theme.components.WelcomeCard
+import com.example.activat.ui.theme.components.rememberHapticFeedback
 import com.example.activat.viewmodel.ActivaTViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
@@ -40,6 +41,9 @@ fun HomeScreen(
     // Estados para animaciones
     var isVisible by remember { mutableStateOf(false) }
     var buttonScale by remember { mutableFloatStateOf(1f) }
+
+    // Feedback háptico
+    val haptic = rememberHapticFeedback()
 
     // Animaciones de entrada
     LaunchedEffect(Unit) {
@@ -96,7 +100,7 @@ fun HomeScreen(
             )
         }
 
-        // Botón Principal con animación
+        // Botón Principal con animación y háptico
         AnimatedVisibility(
             visible = isVisible,
             enter = slideInVertically(
@@ -106,6 +110,7 @@ fun HomeScreen(
         ) {
             Button(
                 onClick = {
+                    haptic.start()
                     viewModel.iniciarCaminata()
                     navController.navigate("caminata?autostart=true")
                 },
@@ -177,7 +182,7 @@ fun HomeScreen(
                 animationSpec = tween(1000, delayMillis = 500)
             ) + fadeIn(animationSpec = tween(1000, delayMillis = 500))
         ) {
-            LastSessionCard(ultimaSesion = ultimaSesion)
+            LastSessionCard(ultimaSesion = ultimaSesion, haptic = haptic)
         }
     }
 
@@ -193,14 +198,18 @@ fun HomeScreen(
 }
 
 @Composable
-private fun LastSessionCard(ultimaSesion: com.example.activat.data.SesionCaminata?) {
+private fun LastSessionCard(
+    ultimaSesion: com.example.activat.data.SesionCaminata?,
+    haptic: com.example.activat.ui.theme.components.HapticFeedbackHelper
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        shape = RoundedCornerShape(16.dp)
+        shape = RoundedCornerShape(16.dp),
+        onClick = { haptic.light() } // Feedback háptico al tocar la card
     ) {
         Column(
             modifier = Modifier.padding(20.dp)

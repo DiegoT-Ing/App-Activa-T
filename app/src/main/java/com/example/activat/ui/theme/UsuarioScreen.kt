@@ -8,6 +8,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.example.activat.ui.theme.components.rememberHapticFeedback
 import com.example.activat.viewmodel.ActivaTViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
@@ -15,6 +16,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 fun UsuarioScreen(viewModel: ActivaTViewModel) {
     // Estados del ViewModel
     val usuarioData by viewModel.usuarioData.collectAsStateWithLifecycle()
+
+    // Feedback háptico
+    val haptic = rememberHapticFeedback()
 
     // Estados locales para los inputs
     var edad by remember { mutableStateOf("") }
@@ -99,9 +103,10 @@ fun UsuarioScreen(viewModel: ActivaTViewModel) {
                         metaPasos = metaPasosInt
                     )
 
+                    haptic.success() // Feedback háptico de éxito
                     showSuccessMessage = true
                 } catch (e: Exception) {
-                    // Manejar errores de conversión
+                    haptic.strong() // Feedback háptico de error
                 }
             },
             modifier = Modifier.fillMaxWidth()
@@ -138,7 +143,8 @@ fun UsuarioScreen(viewModel: ActivaTViewModel) {
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceVariant
-                )
+                ),
+                onClick = { haptic.light() } // Feedback háptico al tocar
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(

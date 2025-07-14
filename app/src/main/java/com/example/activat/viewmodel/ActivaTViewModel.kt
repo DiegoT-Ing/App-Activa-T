@@ -3,6 +3,7 @@ package com.example.activat.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.activat.data.ActivaTRepository
+import com.example.activat.data.ConfiguracionSalud
 import com.example.activat.data.DatosDelDia
 import com.example.activat.data.SesionCaminata
 import com.example.activat.data.UsuarioData
@@ -19,6 +20,9 @@ class ActivaTViewModel(private val repository: ActivaTRepository) : ViewModel() 
     // Estados observables
     private val _usuarioData = MutableStateFlow(UsuarioData())
     val usuarioData: StateFlow<UsuarioData> = _usuarioData.asStateFlow()
+
+    private val _configuracionSalud = MutableStateFlow(ConfiguracionSalud())
+    val configuracionSalud: StateFlow<ConfiguracionSalud> = _configuracionSalud.asStateFlow()
 
     private val _datosDelDia = MutableStateFlow(DatosDelDia())
     val datosDelDia: StateFlow<DatosDelDia> = _datosDelDia.asStateFlow()
@@ -83,6 +87,12 @@ class ActivaTViewModel(private val repository: ActivaTRepository) : ViewModel() 
             }
 
             launch {
+                repository.configuracionSaludFlow.collect { configuracion ->
+                    _configuracionSalud.value = configuracion
+                }
+            }
+
+            launch {
                 repository.datosDelDiaFlow.collect { datosDelDia ->
                     _datosDelDia.value = datosDelDia
                 }
@@ -112,6 +122,20 @@ class ActivaTViewModel(private val repository: ActivaTRepository) : ViewModel() 
                 metaPasosDiarios = metaPasos
             )
             repository.guardarUsuario(nuevoUsuario)
+        }
+    }
+
+    // Función para actualizar configuración de salud
+    fun actualizarConfiguracionSalud(
+        actividadFisica: String,
+        objetivoSalud: String
+    ) {
+        viewModelScope.launch {
+            val nuevaConfiguracion = ConfiguracionSalud(
+                actividadFisica = actividadFisica,
+                objetivoSalud = objetivoSalud
+            )
+            repository.guardarConfiguracionSalud(nuevaConfiguracion)
         }
     }
 

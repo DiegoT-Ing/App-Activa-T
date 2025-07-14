@@ -19,10 +19,25 @@ import kotlin.math.pow
 @Composable
 fun SaludScreen(viewModel: ActivaTViewModel) {
     val usuarioData by viewModel.usuarioData.collectAsStateWithLifecycle()
+    val configuracionSalud by viewModel.configuracionSalud.collectAsStateWithLifecycle()
 
-    // Estados locales para inputs adicionales
+    // Estados locales sincronizados con el ViewModel
     var actividadFisica by remember { mutableStateOf("Sedentario") }
     var objetivoSalud by remember { mutableStateOf("Mantener peso") }
+
+    // Sincronizar con datos del ViewModel
+    LaunchedEffect(configuracionSalud) {
+        actividadFisica = configuracionSalud.actividadFisica
+        objetivoSalud = configuracionSalud.objetivoSalud
+    }
+
+    // Guardar cambios automáticamente
+    LaunchedEffect(actividadFisica, objetivoSalud) {
+        if (actividadFisica != configuracionSalud.actividadFisica ||
+            objetivoSalud != configuracionSalud.objetivoSalud) {
+            viewModel.actualizarConfiguracionSalud(actividadFisica, objetivoSalud)
+        }
+    }
 
     LazyColumn(
         modifier = Modifier

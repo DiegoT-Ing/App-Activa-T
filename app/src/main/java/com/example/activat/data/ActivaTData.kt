@@ -14,6 +14,15 @@ data class UsuarioData(
 )
 
 /**
+ * Configuración de salud del usuario
+ */
+data class ConfiguracionSalud(
+    val actividadFisica: String = "Sedentario",
+    val objetivoSalud: String = "Mantener peso",
+    val ultimaActualizacion: LocalDateTime = LocalDateTime.now()
+)
+
+/**
  * Sesión individual de caminata
  */
 data class SesionCaminata(
