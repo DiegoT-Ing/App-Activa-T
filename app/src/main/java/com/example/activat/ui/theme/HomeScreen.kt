@@ -1,14 +1,29 @@
 package com.example.activat.ui.theme
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import com.example.activat.ui.theme.components.IndicadorMetaPasos
-import com.example.activat.ui.theme.components.SessionMetricsCard
+import com.example.activat.ui.theme.components.AnimatedProgressCard
+import com.example.activat.ui.theme.components.StatsCard
+import com.example.activat.ui.theme.components.WelcomeCard
 import com.example.activat.viewmodel.ActivaTViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
@@ -22,84 +37,258 @@ fun HomeScreen(
     val pasosTotalesDelDia by viewModel.pasosTotalesDelDia.collectAsStateWithLifecycle()
     val ultimaSesion by viewModel.ultimaSesion.collectAsStateWithLifecycle()
 
+    // Estados para animaciones
+    var isVisible by remember { mutableStateOf(false) }
+    var buttonScale by remember { mutableFloatStateOf(1f) }
+
+    // Animaciones de entrada
+    LaunchedEffect(Unit) {
+        isVisible = true
+    }
+
+    // Animación del botón principal
+    val animatedButtonScale by animateFloatAsState(
+        targetValue = buttonScale,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "button_scale"
+    )
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(32.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f),
+                        MaterialTheme.colorScheme.surface
+                    )
+                )
+            )
+            .padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
-        Text(
-            text = "Bienvenido a ActivaT",
-            style = MaterialTheme.typography.headlineLarge
-        )
 
-        Spacer(modifier = Modifier.height(32.dp))
-
-        // Indicador de progreso con datos reales
-        IndicadorMetaPasos(
-            currentSteps = pasosTotalesDelDia.toFloat(),
-            metaPasos = usuarioData.metaPasosDiarios.toFloat()
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Texto informativo de la meta
-        Text(
-            text = "Meta diaria: ${usuarioData.metaPasosDiarios} pasos",
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        // Botón principal
-        Button(
-            onClick = {
-                viewModel.iniciarCaminata()
-                navController.navigate("caminata?autostart=true")
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp)
+        // Card de Bienvenida animada
+        AnimatedVisibility(
+            visible = isVisible,
+            enter = slideInVertically(
+                initialOffsetY = { -it },
+                animationSpec = tween(600, delayMillis = 100)
+            ) + fadeIn(animationSpec = tween(600, delayMillis = 100))
         ) {
-            Text(
-                text = "Iniciar caminata",
-                style = MaterialTheme.typography.titleMedium
+            WelcomeCard()
+        }
+
+        // Card de Progreso Principal animada
+        AnimatedVisibility(
+            visible = isVisible,
+            enter = slideInVertically(
+                initialOffsetY = { it },
+                animationSpec = tween(700, delayMillis = 200)
+            ) + fadeIn(animationSpec = tween(700, delayMillis = 200))
+        ) {
+            AnimatedProgressCard(
+                currentSteps = pasosTotalesDelDia,
+                goalSteps = usuarioData.metaPasosDiarios
             )
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
-
-        // Tarjeta del último registro usando componente reutilizable
-        if (ultimaSesion != null) {
-            SessionMetricsCard(
-                title = "Último registro:",
-                pasos = ultimaSesion!!.pasos,
-                tiempo = ultimaSesion!!.tiempoFormateado(),
-                distancia = ultimaSesion!!.distanciaKm
-            )
-        } else {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                )
+        // Botón Principal con animación
+        AnimatedVisibility(
+            visible = isVisible,
+            enter = slideInVertically(
+                initialOffsetY = { it },
+                animationSpec = tween(800, delayMillis = 300)
+            ) + fadeIn(animationSpec = tween(800, delayMillis = 300))
+        ) {
+            Button(
+                onClick = {
+                    viewModel.iniciarCaminata()
+                    navController.navigate("caminata?autostart=true")
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(64.dp)
+                    .scale(animatedButtonScale),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                ),
+                shape = RoundedCornerShape(32.dp),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
             ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = null,
+                        modifier = Modifier.size(28.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = "Iniciar Caminata",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+
+        // Stats Cards animadas
+        AnimatedVisibility(
+            visible = isVisible,
+            enter = slideInVertically(
+                initialOffsetY = { it },
+                animationSpec = tween(900, delayMillis = 400)
+            ) + fadeIn(animationSpec = tween(900, delayMillis = 400))
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                StatsCard(
+                    title = "Hoy",
+                    value = "$pasosTotalesDelDia",
+                    subtitle = "pasos",
+                    icon = Icons.AutoMirrored.Filled.TrendingUp,
+                    modifier = Modifier.weight(1f)
+                )
+
+                StatsCard(
+                    title = "Meta",
+                    value = "${usuarioData.metaPasosDiarios}",
+                    subtitle = "pasos",
+                    icon = Icons.AutoMirrored.Filled.TrendingUp,
+                    modifier = Modifier.weight(1f),
+                    isGoal = true
+                )
+            }
+        }
+
+        // Última Sesión Card animada
+        AnimatedVisibility(
+            visible = isVisible,
+            enter = slideInVertically(
+                initialOffsetY = { it },
+                animationSpec = tween(1000, delayMillis = 500)
+            ) + fadeIn(animationSpec = tween(1000, delayMillis = 500))
+        ) {
+            LastSessionCard(ultimaSesion = ultimaSesion)
+        }
+    }
+
+    // Efectos de interacción del botón
+    LaunchedEffect(Unit) {
+        while (true) {
+            kotlinx.coroutines.delay(3000)
+            buttonScale = 1.05f
+            kotlinx.coroutines.delay(200)
+            buttonScale = 1f
+        }
+    }
+}
+
+@Composable
+private fun LastSessionCard(ultimaSesion: com.example.activat.data.SesionCaminata?) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Última Actividad",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+
+                if (ultimaSesion != null) {
+                    Box(
+                        modifier = Modifier
+                            .size(12.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            if (ultimaSesion != null) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column {
+                        Text(
+                            text = "${ultimaSesion.pasos}",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "pasos",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = ultimaSesion.tiempoFormateado(),
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "tiempo",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = "%.2f".format(ultimaSesion.distanciaKm),
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "km",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            } else {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(24.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "🚶",
+                        text = "🚶‍♂️",
                         style = MaterialTheme.typography.displayMedium
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = "¡Inicia tu primera caminata!",
-                        style = MaterialTheme.typography.titleMedium
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Medium
                     )
                     Text(
                         text = "Tus estadísticas aparecerán aquí",
@@ -109,14 +298,5 @@ fun HomeScreen(
                 }
             }
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Información adicional
-        Text(
-            text = "Pasos hoy: $pasosTotalesDelDia",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.primary
-        )
     }
 }
