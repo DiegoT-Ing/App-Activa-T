@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.activat.ui.theme.components.IndicadorMetaPasos
+import com.example.activat.ui.theme.components.SessionMetricsCard
 import com.example.activat.viewmodel.ActivaTViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
@@ -18,7 +19,6 @@ fun HomeScreen(
 ) {
     // Observar estados del ViewModel
     val usuarioData by viewModel.usuarioData.collectAsStateWithLifecycle()
-    val porcentajeMetaAlcanzado by viewModel.porcentajeMetaAlcanzado.collectAsStateWithLifecycle()
     val pasosTotalesDelDia by viewModel.pasosTotalesDelDia.collectAsStateWithLifecycle()
     val ultimaSesion by viewModel.ultimaSesion.collectAsStateWithLifecycle()
 
@@ -71,28 +71,41 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Tarjeta del último registro
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant
+        // Tarjeta del último registro usando componente reutilizable
+        if (ultimaSesion != null) {
+            SessionMetricsCard(
+                title = "Último registro:",
+                pasos = ultimaSesion!!.pasos,
+                tiempo = ultimaSesion!!.tiempoFormateado(),
+                distancia = ultimaSesion!!.distanciaKm
             )
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = "Último registro:",
-                    style = MaterialTheme.typography.titleMedium
+        } else {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-
-                if (ultimaSesion != null) {
-                    Text("Pasos: ${ultimaSesion!!.pasos}")
-                    Text("Tiempo: ${ultimaSesion!!.tiempoFormateado()}")
-                    Text("Distancia: ${"%.2f".format(ultimaSesion!!.distanciaKm)} km")
-                } else {
-                    Text("Pasos: ---")
-                    Text("Tiempo: --:--")
-                    Text("Distancia: -- km")
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "🚶",
+                        style = MaterialTheme.typography.displayMedium
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "¡Inicia tu primera caminata!",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        text = "Tus estadísticas aparecerán aquí",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
         }

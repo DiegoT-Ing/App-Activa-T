@@ -17,6 +17,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.example.activat.ui.theme.components.IndicadorMetaPasos
+import com.example.activat.ui.theme.components.LiveSessionMetrics
 import com.example.activat.viewmodel.ActivaTViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
@@ -31,7 +32,6 @@ fun CaminataScreen(
 
     // Estados del ViewModel
     val usuarioData by viewModel.usuarioData.collectAsStateWithLifecycle()
-    val porcentajeMetaAlcanzado by viewModel.porcentajeMetaAlcanzado.collectAsStateWithLifecycle()
     val pasosTotalesDelDia by viewModel.pasosTotalesDelDia.collectAsStateWithLifecycle()
     val pasosEnSesionActual by viewModel.pasosEnSesionActual.collectAsStateWithLifecycle()
     val tiempoSesionActual by viewModel.tiempoSesionActual.collectAsStateWithLifecycle()
@@ -110,38 +110,32 @@ fun CaminataScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Título dinámico
         Text(
-            text = "Sesión activa",
+            text = if (caminataActiva) {
+                if (isPaused) "Sesión pausada" else "¡Caminando!"
+            } else {
+                "Listo para caminar"
+            },
             style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.primary
+            color = if (caminataActiva && !isPaused) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.onSurface
+            }
         )
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Métricas de la sesión actual
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant
+        // Métricas de la sesión usando componente reutilizable
+        if (caminataActiva) {
+            LiveSessionMetrics(
+                pasosEnSesion = pasosEnSesionActual,
+                tiempoSesion = tiempoSesionActual
             )
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "Pasos en sesión: $pasosEnSesionActual",
-                    style = MaterialTheme.typography.headlineSmall
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Tiempo: ${formatTime(tiempoSesionActual)}",
-                    style = MaterialTheme.typography.headlineSmall
-                )
-            }
-        }
 
-        Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(24.dp))
+        }
 
         // Indicador de progreso total del día
         IndicadorMetaPasos(
@@ -152,7 +146,7 @@ fun CaminataScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "Progreso total del día",
+            text = "Progreso total del día: $pasosTotalesDelDia pasos",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -178,7 +172,14 @@ fun CaminataScreen(
             ) {
                 Button(
                     onClick = { isPaused = !isPaused },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    colors = if (isPaused) {
+                        ButtonDefaults.buttonColors()
+                    } else {
+                        ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.secondary
+                        )
+                    }
                 ) {
                     Text(if (isPaused) "Reanudar" else "Pausar")
                 }
@@ -195,17 +196,25 @@ fun CaminataScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Información adicional
-        Text(
-            text = "Total del día: $pasosTotalesDelDia pasos",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.primary
-        )
+        // Información de estado
+        if (caminataActiva && isPaused) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer
+                )
+            ) {
+                Text(
+                    text = "⏸️ Sesión pausada - Presiona Reanudar para continuar",
+                    modifier = Modifier.padding(12.dp),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            }
+        }
     }
 
-    // Dialog de confirmación
+    // Dialog de confirmación optimizado
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
@@ -216,22 +225,26 @@ fun CaminataScreen(
                     isPaused = false
                     onFinalizar()
                 }) {
-                    Text("Sí, detener")
+                    Text("Sí, guardar y finalizar")
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDialog = false }) {
-                    Text("Cancelar")
+                    Text("Continuar caminando")
                 }
             },
-            title = { Text("¿Detener caminata?") },
-            text = { Text("¿Estás seguro de que deseas finalizar esta sesión? Se guardará automáticamente.") }
+            title = { Text("¿Finalizar sesión?") },
+            text = {
+                Column {
+                    Text("Tu progreso se guardará automáticamente:")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "• $pasosEnSesionActual pasos\n• ${com.example.activat.ui.theme.components.formatTime(tiempoSesionActual)}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
         )
     }
-}
-
-fun formatTime(seconds: Long): String {
-    val minutes = seconds / 60
-    val secs = seconds % 60
-    return "%02d:%02d".format(minutes, secs)
 }
