@@ -8,9 +8,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.activat.ui.theme.components.IndicadorMetaPasos
+import com.example.activat.viewmodel.ActivaTViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
-fun HomeScreen(navController: NavHostController) {
+fun HomeScreen(
+    navController: NavHostController,
+    viewModel: ActivaTViewModel
+) {
+    // Observar estados del ViewModel
+    val usuarioData by viewModel.usuarioData.collectAsStateWithLifecycle()
+    val porcentajeMetaAlcanzado by viewModel.porcentajeMetaAlcanzado.collectAsStateWithLifecycle()
+    val pasosTotalesDelDia by viewModel.pasosTotalesDelDia.collectAsStateWithLifecycle()
+    val ultimaSesion by viewModel.ultimaSesion.collectAsStateWithLifecycle()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -23,34 +34,76 @@ fun HomeScreen(navController: NavHostController) {
             style = MaterialTheme.typography.headlineLarge
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
-        Button(onClick = {
-            navController.navigate("caminata?autostart=true")
-        }) {
-            Text("Iniciar caminata")
+        // Indicador de progreso con datos reales
+        IndicadorMetaPasos(
+            currentSteps = pasosTotalesDelDia.toFloat(),
+            metaPasos = usuarioData.metaPasosDiarios.toFloat()
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Texto informativo de la meta
+        Text(
+            text = "Meta diaria: ${usuarioData.metaPasosDiarios} pasos",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // Botón principal
+        Button(
+            onClick = {
+                viewModel.iniciarCaminata()
+                navController.navigate("caminata?autostart=true")
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
+        ) {
+            Text(
+                text = "Iniciar caminata",
+                style = MaterialTheme.typography.titleMedium
+            )
         }
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        val metaPasos = 6000f
-        val pasosDelDia = 3240f // Simulado; luego será real
-
-        IndicadorMetaPasos(currentSteps = pasosDelDia, metaPasos = metaPasos)
-
-        Spacer(modifier = Modifier.height(32.dp))
-
+        // Tarjeta del último registro
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
+            )
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text("Último registro:", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    text = "Último registro:",
+                    style = MaterialTheme.typography.titleMedium
+                )
                 Spacer(modifier = Modifier.height(8.dp))
-                Text("Pasos: ---")
-                Text("Tiempo: --:--")
-                Text("Distancia: -- km")
+
+                if (ultimaSesion != null) {
+                    Text("Pasos: ${ultimaSesion!!.pasos}")
+                    Text("Tiempo: ${ultimaSesion!!.tiempoFormateado()}")
+                    Text("Distancia: ${"%.2f".format(ultimaSesion!!.distanciaKm)} km")
+                } else {
+                    Text("Pasos: ---")
+                    Text("Tiempo: --:--")
+                    Text("Distancia: -- km")
+                }
             }
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Información adicional
+        Text(
+            text = "Pasos hoy: $pasosTotalesDelDia",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.primary
+        )
     }
 }

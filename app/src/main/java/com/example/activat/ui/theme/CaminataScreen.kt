@@ -17,11 +17,30 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.example.activat.ui.theme.components.IndicadorMetaPasos
+import com.example.activat.viewmodel.ActivaTViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
 
 @Composable
-fun CaminataScreen(autoStart: Boolean = false, onFinalizar: () -> Unit) {
+fun CaminataScreen(
+    autoStart: Boolean = false,
+    viewModel: ActivaTViewModel,
+    onFinalizar: () -> Unit
+) {
     val context = LocalContext.current
+
+    // Estados del ViewModel
+    val usuarioData by viewModel.usuarioData.collectAsStateWithLifecycle()
+    val porcentajeMetaAlcanzado by viewModel.porcentajeMetaAlcanzado.collectAsStateWithLifecycle()
+    val pasosTotalesDelDia by viewModel.pasosTotalesDelDia.collectAsStateWithLifecycle()
+    val pasosEnSesionActual by viewModel.pasosEnSesionActual.collectAsStateWithLifecycle()
+    val tiempoSesionActual by viewModel.tiempoSesionActual.collectAsStateWithLifecycle()
+    val caminataActiva by viewModel.caminataActiva.collectAsStateWithLifecycle()
+
+    // Estados locales para la UI
+    var isPaused by remember { mutableStateOf(false) }
+    var showDialog by remember { mutableStateOf(false) }
+    var stepsAtStart by remember { mutableFloatStateOf(0f) }
 
     val permissionGranted = remember {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -34,44 +53,36 @@ fun CaminataScreen(autoStart: Boolean = false, onFinalizar: () -> Unit) {
         }
     }
 
-    var isWalking by remember { mutableStateOf(false) }
-    var isPaused by remember { mutableStateOf(false) }
-    var showDialog by remember { mutableStateOf(false) }
-
-    var stepsAtStart by remember { mutableFloatStateOf(0f) }
-    var currentSteps by remember { mutableFloatStateOf(0f) }
-    var elapsedTime by remember { mutableLongStateOf(0L) }
-
+    // Autostart effect
     LaunchedEffect(autoStart) {
-        if (autoStart && !isWalking) {
+        if (autoStart && !caminataActiva) {
             stepsAtStart = 0f
-            currentSteps = 0f
-            elapsedTime = 0L
-            isWalking = true
+            viewModel.iniciarCaminata()
         }
     }
 
     // Sensor setup
-    DisposableEffect(isWalking) {
+    DisposableEffect(caminataActiva) {
         val sensorManager = context.getSystemService(SensorManager::class.java)
         val stepSensor = sensorManager?.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
 
         val sensorListener = object : SensorEventListener {
             override fun onSensorChanged(event: SensorEvent) {
-                if (isWalking && !isPaused) {
+                if (caminataActiva && !isPaused) {
                     if (stepsAtStart == 0f) {
                         stepsAtStart = event.values[0]
                     }
-                    currentSteps = event.values[0] - stepsAtStart
+                    val pasosEnSesion = (event.values[0] - stepsAtStart).toInt()
+                    viewModel.actualizarPasosSesion(pasosEnSesion)
                 }
             }
 
             override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
         }
 
-        if (permissionGranted && stepSensor != null) {
+        if (permissionGranted && stepSensor != null && caminataActiva) {
             sensorManager.registerListener(sensorListener, stepSensor, SensorManager.SENSOR_DELAY_UI)
-        } else {
+        } else if (!permissionGranted) {
             Toast.makeText(context, "Sensor de pasos no disponible o sin permisos", Toast.LENGTH_LONG).show()
         }
 
@@ -80,19 +91,17 @@ fun CaminataScreen(autoStart: Boolean = false, onFinalizar: () -> Unit) {
         }
     }
 
-    // Tiempo
-    LaunchedEffect(isWalking, isPaused) {
-        while (isWalking) {
+    // Timer effect
+    LaunchedEffect(caminataActiva, isPaused) {
+        while (caminataActiva) {
             if (!isPaused) {
                 delay(1000L)
-                elapsedTime += 1
+                viewModel.actualizarTiempoSesion(tiempoSesionActual + 1)
             } else {
                 delay(100L)
             }
         }
     }
-
-    val metaPasos = 6000f
 
     Column(
         modifier = Modifier
@@ -101,44 +110,110 @@ fun CaminataScreen(autoStart: Boolean = false, onFinalizar: () -> Unit) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Pasos: ${currentSteps.toInt()}", style = MaterialTheme.typography.headlineMedium)
+        Text(
+            text = "Sesión activa",
+            style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.primary
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Métricas de la sesión actual
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Pasos en sesión: $pasosEnSesionActual",
+                    style = MaterialTheme.typography.headlineSmall
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Tiempo: ${formatTime(tiempoSesionActual)}",
+                    style = MaterialTheme.typography.headlineSmall
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // Indicador de progreso total del día
+        IndicadorMetaPasos(
+            currentSteps = pasosTotalesDelDia.toFloat(),
+            metaPasos = usuarioData.metaPasosDiarios.toFloat()
+        )
+
         Spacer(modifier = Modifier.height(16.dp))
-        Text("Tiempo: ${formatTime(elapsedTime)}", style = MaterialTheme.typography.headlineMedium)
+
+        Text(
+            text = "Progreso total del día",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
 
         Spacer(modifier = Modifier.height(32.dp))
-        IndicadorMetaPasos(currentSteps = currentSteps, metaPasos = metaPasos)
-        Spacer(modifier = Modifier.height(32.dp))
 
-        if (!isWalking) {
-            Button(onClick = {
-                stepsAtStart = 0f
-                currentSteps = 0f
-                elapsedTime = 0L
-                isPaused = false
-                isWalking = true
-            }) {
+        // Botones de control
+        if (!caminataActiva) {
+            Button(
+                onClick = {
+                    stepsAtStart = 0f
+                    viewModel.iniciarCaminata()
+                    isPaused = false
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 Text("Iniciar caminata")
             }
         } else {
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                Button(onClick = { isPaused = !isPaused }) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Button(
+                    onClick = { isPaused = !isPaused },
+                    modifier = Modifier.weight(1f)
+                ) {
                     Text(if (isPaused) "Reanudar" else "Pausar")
                 }
 
-                Button(onClick = { showDialog = true }) {
+                Button(
+                    onClick = { showDialog = true },
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
                     Text("Detener")
                 }
             }
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Información adicional
+        Text(
+            text = "Total del día: $pasosTotalesDelDia pasos",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.primary
+        )
     }
 
+    // Dialog de confirmación
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
             confirmButton = {
                 TextButton(onClick = {
-                    isWalking = false
+                    viewModel.detenerCaminata()
                     showDialog = false
+                    isPaused = false
                     onFinalizar()
                 }) {
                     Text("Sí, detener")
@@ -150,7 +225,7 @@ fun CaminataScreen(autoStart: Boolean = false, onFinalizar: () -> Unit) {
                 }
             },
             title = { Text("¿Detener caminata?") },
-            text = { Text("¿Estás seguro de que deseas finalizar esta sesión?") }
+            text = { Text("¿Estás seguro de que deseas finalizar esta sesión? Se guardará automáticamente.") }
         )
     }
 }
