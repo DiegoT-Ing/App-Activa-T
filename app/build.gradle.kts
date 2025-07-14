@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.activat"
-        minSdk = 24
+        minSdk = 26
         //noinspection OldTargetApi
         targetSdk = 35
         versionCode = 1
