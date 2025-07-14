@@ -17,7 +17,6 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.ui.Modifier
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
@@ -57,10 +56,10 @@ fun ActivaTApp() {
 
     val items = listOf(
         NavItem("Home", Icons.Default.Home, "home"),
-        NavItem("Caminata", Icons.AutoMirrored.Filled.DirectionsWalk, "caminata"),
         NavItem("Historial", Icons.Default.History, "historial"),
         NavItem("Usuario", Icons.Default.Person, "usuario")
     )
+
 
     Scaffold(
         bottomBar = {

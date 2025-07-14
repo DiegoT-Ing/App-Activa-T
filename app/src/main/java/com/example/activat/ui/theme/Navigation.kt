@@ -8,8 +8,16 @@ import androidx.navigation.compose.composable
 @Composable
 fun NavigationGraph(navController: NavHostController) {
     NavHost(navController = navController, startDestination = "home") {
-        composable("home") { HomeScreen() }
-        composable("caminata") { CaminataScreen() }
+        composable("home") { HomeScreen(navController) }
+        composable("caminata?autostart={autostart}") { backStackEntry ->
+            val autoStartArg = backStackEntry.arguments?.getString("autostart") == "true"
+            CaminataScreen(
+                autoStart = autoStartArg,
+                onFinalizar = {
+                    navController.popBackStack("home", false)
+                }
+            )
+        }
         composable("historial") { HistorialScreen() }
         composable("usuario") { UsuarioScreen() }
     }
