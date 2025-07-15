@@ -46,160 +46,58 @@ fun StepsChart(
         label = "chart_animation"
     )
 
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-        shape = RoundedCornerShape(20.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(20.dp)
+    // SOLO LA GRÁFICA - SIN TÍTULO NI ESTADÍSTICAS
+    if (sesiones.isNotEmpty()) {
+        // Preparar datos para la gráfica
+        val dataPoints = prepareChartData(sesiones, periodo)
+        val maxSteps = dataPoints.maxOfOrNull { it.steps } ?: 1000
+
+        // Canvas para la gráfica - SIN CARD WRAPPER
+        Canvas(
+            modifier = modifier
+                .fillMaxWidth()
+                .height(200.dp)
+                .background(
+                    color = MaterialTheme.colorScheme.surface,
+                    shape = RoundedCornerShape(8.dp)
+                )
+                .padding(16.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            drawChart(
+                dataPoints = dataPoints,
+                maxSteps = maxSteps,
+                animationProgress = animatedProgress,
+                primaryColor = Color(0xFF2E7D32), // FitnessGreen60
+                backgroundColor = Color(0xFFE0E0E0), // NeutralGray80
+                surfaceColor = Color(0xFFFFFFFF) // Blanco
+            )
+        }
+    } else {
+        // Estado vacío simple sin card
+        Box(
+            modifier = modifier
+                .fillMaxWidth()
+                .height(200.dp)
+                .background(
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    shape = RoundedCornerShape(8.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "Tendencia de Pasos",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    text = "📈",
+                    style = MaterialTheme.typography.displayMedium
                 )
-
-                // Indicador del período
-                Surface(
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(
-                        text = periodo,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Sin datos para graficar",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            if (sesiones.isNotEmpty()) {
-                // Preparar datos para la gráfica
-                val dataPoints = prepareChartData(sesiones, periodo)
-                val maxSteps = dataPoints.maxOfOrNull { it.steps } ?: 1000
-
-                // Canvas para la gráfica
-                Canvas(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp)
-                ) {
-                    drawChart(
-                        dataPoints = dataPoints,
-                        maxSteps = maxSteps,
-                        animationProgress = animatedProgress,
-                        primaryColor = androidx.compose.ui.graphics.Color(0xFF6750A4),
-                        backgroundColor = androidx.compose.ui.graphics.Color(0xFFF3E5F5),
-                        surfaceColor = androidx.compose.ui.graphics.Color(0xFFFFFBFE)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Estadísticas rápidas
-                StatsRow(sesiones = sesiones, animationProgress = animatedProgress)
-
-            } else {
-                // Estado vacío con animación
-                EmptyChartState(modifier = Modifier.height(200.dp))
-            }
-        }
-    }
-}
-
-@Composable
-private fun StatsRow(
-    sesiones: List<SesionCaminata>,
-    animationProgress: Float
-) {
-    val totalSteps = sesiones.sumOf { it.pasos }
-    val avgSteps = if (sesiones.isNotEmpty()) totalSteps / sesiones.size else 0
-    val bestDay = sesiones.maxByOrNull { it.pasos }
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        StatItem(
-            label = "Total",
-            value = "${(totalSteps * animationProgress).toInt()}",
-            color = MaterialTheme.colorScheme.primary
-        )
-
-        StatItem(
-            label = "Promedio",
-            value = "${(avgSteps * animationProgress).toInt()}",
-            color = MaterialTheme.colorScheme.secondary
-        )
-
-        StatItem(
-            label = "Mejor día",
-            value = "${((bestDay?.pasos ?: 0) * animationProgress).toInt()}",
-            color = MaterialTheme.colorScheme.tertiary
-        )
-    }
-}
-
-@Composable
-private fun StatItem(
-    label: String,
-    value: String,
-    color: Color
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = value,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = color
-        )
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
-
-@Composable
-private fun EmptyChartState(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier.fillMaxWidth(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "📈",
-                style = MaterialTheme.typography.displayMedium
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Gráfica aparecerá aquí",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = "Inicia sesiones para ver tendencias",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
         }
     }
 }
@@ -267,12 +165,12 @@ private fun DrawScope.drawChart(
     val chartWidth = width - 2 * padding
     val chartHeight = height - 2 * padding
 
-    // Dibujar fondo del gráfico
+    // Dibujar fondo del gráfico más sutil
     drawRoundRect(
-        color = backgroundColor.copy(alpha = 0.1f),
+        color = backgroundColor.copy(alpha = 0.05f),
         topLeft = Offset(padding, padding),
         size = androidx.compose.ui.geometry.Size(chartWidth, chartHeight),
-        cornerRadius = androidx.compose.ui.geometry.CornerRadius(12f, 12f)
+        cornerRadius = androidx.compose.ui.geometry.CornerRadius(8f, 8f)
     )
 
     // Calcular puntos de la línea
@@ -283,7 +181,7 @@ private fun DrawScope.drawChart(
     }
 
     if (points.size > 1) {
-        // Dibujar área bajo la curva (gradiente)
+        // Dibujar área bajo la curva (gradiente sutil)
         val path = Path().apply {
             moveTo(points.first().x, padding + chartHeight)
             points.forEach { point ->
@@ -297,7 +195,7 @@ private fun DrawScope.drawChart(
             path = path,
             brush = Brush.verticalGradient(
                 colors = listOf(
-                    primaryColor.copy(alpha = 0.3f),
+                    primaryColor.copy(alpha = 0.2f),
                     primaryColor.copy(alpha = 0.05f)
                 ),
                 startY = padding,
@@ -317,35 +215,65 @@ private fun DrawScope.drawChart(
             path = linePath,
             color = primaryColor,
             style = Stroke(
-                width = 4f,
+                width = 3f,
                 cap = StrokeCap.Round,
                 join = StrokeJoin.Round
             )
         )
 
-        // Dibujar puntos
+        // Dibujar puntos más pequeños
         points.forEach { point ->
             drawCircle(
                 color = surfaceColor,
-                radius = 8f,
+                radius = 6f,
                 center = point
             )
             drawCircle(
                 color = primaryColor,
-                radius = 5f,
+                radius = 4f,
                 center = point
             )
         }
     }
 
-    // Dibujar líneas de cuadrícula horizontales
-    repeat(4) { i ->
-        val y = padding + (chartHeight / 4) * (i + 1)
+    // Dibujar líneas de cuadrícula horizontales muy sutiles
+    repeat(3) { i ->
+        val y = padding + (chartHeight / 3) * (i + 1)
         drawLine(
-            color = backgroundColor.copy(alpha = 0.3f),
+            color = backgroundColor.copy(alpha = 0.2f),
             start = Offset(padding, y),
             end = Offset(padding + chartWidth, y),
             strokeWidth = 1f
+        )
+    }
+
+    // Dibujar etiquetas de ejes si hay datos
+    if (dataPoints.isNotEmpty()) {
+        // Etiquetas en X (simplificadas)
+        dataPoints.take(3).forEachIndexed { index, dataPoint ->
+            val x = padding + (index.toFloat() / 2) * chartWidth
+            drawContext.canvas.nativeCanvas.drawText(
+                dataPoint.label,
+                x,
+                padding + chartHeight + 20f,
+                android.graphics.Paint().apply {
+                    color = backgroundColor.copy(alpha = 0.7f).toArgb()
+                    textSize = 24f
+                    textAlign = android.graphics.Paint.Align.CENTER
+                }
+            )
+        }
+
+        // Etiqueta Y máxima
+        drawContext.canvas.nativeCanvas.drawText(
+            "$maxSteps",
+            padding - 30f,
+            padding + 10f,
+            android.graphics.Paint().apply {
+                color = backgroundColor.copy(alpha = 0.7f).toArgb()
+                textSize = 20f
+                textAlign = android.graphics.Paint.Align.RIGHT
+            }
         )
     }
 }
