@@ -3,20 +3,17 @@ package com.example.activat.ui.theme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.activat.ui.theme.components.*
 import com.example.activat.viewmodel.ActivaTViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.activat.data.SesionCaminata
 import java.time.format.DateTimeFormatter
 
 @Composable
@@ -43,7 +40,7 @@ fun HistorialScreen(viewModel: ActivaTViewModel) {
         item {
             Column {
                 Text(
-                    text = "Historial de actividad",
+                    text = "HISTORIAL DE ACTIVIDAD",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -58,12 +55,14 @@ fun HistorialScreen(viewModel: ActivaTViewModel) {
 
         // Selector de período con gráfica integrada - SIN REDUNDANCIAS
         item {
-            CleanCard {
+            CleanCard(
+                backgroundColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+                content = {
                 Column {
                     // Header con selector integrado - MÁS ESPACIO PARA BOTONES
                     Column {
                         Text(
-                            text = "Tendencia de pasos",
+                            text = "📈 Tendencia de pasos",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
@@ -137,7 +136,7 @@ fun HistorialScreen(viewModel: ActivaTViewModel) {
                         }
                     }
                 }
-            }
+            })
         }
 
         // Resumen estadístico SOLO si hay datos - SIN REDUNDANCIAS NI REPETICIONES
@@ -148,46 +147,46 @@ fun HistorialScreen(viewModel: ActivaTViewModel) {
                 val mayorSesion = sesionesFiltradas.maxByOrNull { it.pasos }
 
                 CleanCard(
-                    borderColor = FitnessGreen60
-                ) {
-                    Column {
-                        Text(
-                            text = "📊 Resumen",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = FitnessGreen60
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
+                    content = {
+                        Column {
+                            Text(
+                                text = "📊 Resumen",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
 
-                        // Solo métricas importantes
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            CleanStatsCard(
-                                title = "Total",
-                                value = "$totalPasos",
-                                subtitle = "pasos",
-                                modifier = Modifier.weight(1f),
-                                color = FitnessGreen60
-                            )
-                            CleanStatsCard(
-                                title = "Promedio",
-                                value = "$promedioPasos",
-                                subtitle = "por sesión",
-                                modifier = Modifier.weight(1f),
-                                color = TechBlue60
-                            )
-                            CleanStatsCard(
-                                title = "Mejor día",
-                                value = "${mayorSesion?.pasos ?: 0}",
-                                subtitle = "pasos máx",
-                                modifier = Modifier.weight(1f),
-                                color = EnergyOrange60
-                            )
+                            // Solo métricas importantes
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                CleanStatsCard(
+                                    title = "Total",
+                                    value = "$totalPasos",
+                                    subtitle = "pasos",
+                                    modifier = Modifier.weight(1f),
+                                    color = FitnessGreen60
+                                )
+                                CleanStatsCard(
+                                    title = "Promedio",
+                                    value = "$promedioPasos",
+                                    subtitle = "por sesión",
+                                    modifier = Modifier.weight(1f),
+                                    color = TechBlue60
+                                )
+                                CleanStatsCard(
+                                    title = "Mejor día",
+                                    value = "${mayorSesion?.pasos ?: 0}",
+                                    subtitle = "pasos máx",
+                                    modifier = Modifier.weight(1f),
+                                    color = EnergyOrange60
+                                )
+                            }
                         }
                     }
-                }
+                )
             }
 
             // SIEMPRE mostrar las últimas 5 sesiones para que el usuario vea su actividad
@@ -210,19 +209,20 @@ fun HistorialScreen(viewModel: ActivaTViewModel) {
             if (sesionesFiltradas.size > 5) {
                 item {
                     CleanCard(
-                        backgroundColor = MaterialTheme.colorScheme.surfaceVariant
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Text(
-                                text = "📋 ${sesionesFiltradas.size - 5} sesión${if(sesionesFiltradas.size - 5 != 1) "es" else ""} más registrada${if(sesionesFiltradas.size - 5 != 1) "s" else ""}",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                        backgroundColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+                        content = {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = "📋 ${sesionesFiltradas.size - 5} sesión${if(sesionesFiltradas.size - 5 != 1) "es" else ""} más registrada${if(sesionesFiltradas.size - 5 != 1) "s" else ""}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
-                    }
+                    )
                 }
             }
         }
@@ -239,40 +239,44 @@ private fun CleanStatsCard(
 ) {
     CleanCard(
         modifier = modifier,
+        borderColor = color,
         backgroundColor = color.copy(alpha = 0.05f),
-        borderColor = color
-    ) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = color
-            )
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+        content = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = color
+                )
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
-    }
+    )
 }
 
 @Composable
 private fun CleanSessionCard(
-    sesion: com.example.activat.data.SesionCaminata,
-    metaDiaria: Int
+    sesion: SesionCaminata,
+    metaDiaria: Int,
+    backgroundColor: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
 ) {
-    CleanCard {
+    CleanCard(
+        backgroundColor = backgroundColor,
+        content = {
         Column {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -351,7 +355,7 @@ private fun CleanSessionCard(
                 }
             }
         }
-    }
+    })
 }
 
 @Composable
@@ -378,33 +382,6 @@ private fun CleanMetricColumn(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-    }
-}
-
-@Composable
-private fun CleanEmptyHistoryState() {
-    CleanCard {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "📊",
-                style = MaterialTheme.typography.displayLarge
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "Sin historial aún",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Inicia tu primera caminata para ver gráficas y estadísticas detalladas aquí",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
     }
 }
 

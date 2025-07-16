@@ -52,9 +52,6 @@ object HapticFeedbackManager {
         triggerImpact(context, HapticIntensity.MEDIUM)
     }
 
-    fun triggerStop(context: Context) {
-        triggerImpact(context, HapticIntensity.STRONG)
-    }
 }
 
 enum class HapticIntensity {
@@ -73,5 +70,4 @@ class HapticFeedbackHelper(private val context: Context) {
     fun strong() = HapticFeedbackManager.triggerImpact(context, HapticIntensity.STRONG)
     fun success() = HapticFeedbackManager.triggerSuccess(context)
     fun start() = HapticFeedbackManager.triggerStart(context)
-    fun stop() = HapticFeedbackManager.triggerStop(context)
 }

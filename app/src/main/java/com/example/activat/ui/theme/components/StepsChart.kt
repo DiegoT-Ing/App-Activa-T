@@ -1,26 +1,47 @@
 package com.example.activat.ui.theme.components
 
-import androidx.compose.animation.*
-import androidx.compose.animation.core.*
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.*
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.activat.data.SesionCaminata
+import com.example.activat.ui.theme.FitnessGreen60
+import com.example.activat.ui.theme.NeutralGray80
 import java.time.format.DateTimeFormatter
-import kotlin.math.max
 
 @Composable
 fun StepsChart(
@@ -29,6 +50,8 @@ fun StepsChart(
     modifier: Modifier = Modifier
 ) {
     var isVisible by remember { mutableStateOf(false) }
+    val textMeasurer = rememberTextMeasurer()
+    LocalDensity.current
 
     // Animación de entrada
     LaunchedEffect(sesiones) {
@@ -46,13 +69,12 @@ fun StepsChart(
         label = "chart_animation"
     )
 
-    // SOLO LA GRÁFICA - SIN TÍTULO NI ESTADÍSTICAS
     if (sesiones.isNotEmpty()) {
         // Preparar datos para la gráfica
         val dataPoints = prepareChartData(sesiones, periodo)
         val maxSteps = dataPoints.maxOfOrNull { it.steps } ?: 1000
 
-        // Canvas para la gráfica - SIN CARD WRAPPER
+        // Canvas para la gráfica
         Canvas(
             modifier = modifier
                 .fillMaxWidth()
@@ -67,13 +89,14 @@ fun StepsChart(
                 dataPoints = dataPoints,
                 maxSteps = maxSteps,
                 animationProgress = animatedProgress,
-                primaryColor = Color(0xFF2E7D32), // FitnessGreen60
-                backgroundColor = Color(0xFFE0E0E0), // NeutralGray80
-                surfaceColor = Color(0xFFFFFFFF) // Blanco
+                primaryColor = FitnessGreen60,
+                backgroundColor = NeutralGray80,
+                surfaceColor = Color.White,
+                textMeasurer = textMeasurer
             )
         }
     } else {
-        // Estado vacío simple sin card
+        // Estado vacío
         Box(
             modifier = modifier
                 .fillMaxWidth()
@@ -155,17 +178,18 @@ private fun DrawScope.drawChart(
     animationProgress: Float,
     primaryColor: Color,
     backgroundColor: Color,
-    surfaceColor: Color
+    surfaceColor: Color,
+    textMeasurer: TextMeasurer
 ) {
     if (dataPoints.isEmpty()) return
 
     val width = size.width
     val height = size.height
-    val padding = 40f
+    val padding = 50f
     val chartWidth = width - 2 * padding
     val chartHeight = height - 2 * padding
 
-    // Dibujar fondo del gráfico más sutil
+    // Dibujar fondo del gráfico
     drawRoundRect(
         color = backgroundColor.copy(alpha = 0.05f),
         topLeft = Offset(padding, padding),
@@ -181,7 +205,7 @@ private fun DrawScope.drawChart(
     }
 
     if (points.size > 1) {
-        // Dibujar área bajo la curva (gradiente sutil)
+        // Dibujar área bajo la curva
         val path = Path().apply {
             moveTo(points.first().x, padding + chartHeight)
             points.forEach { point ->
@@ -221,7 +245,7 @@ private fun DrawScope.drawChart(
             )
         )
 
-        // Dibujar puntos más pequeños
+        // Dibujar puntos
         points.forEach { point ->
             drawCircle(
                 color = surfaceColor,
@@ -236,7 +260,7 @@ private fun DrawScope.drawChart(
         }
     }
 
-    // Dibujar líneas de cuadrícula horizontales muy sutiles
+    // Dibujar líneas de cuadrícula horizontales
     repeat(3) { i ->
         val y = padding + (chartHeight / 3) * (i + 1)
         drawLine(
@@ -247,33 +271,79 @@ private fun DrawScope.drawChart(
         )
     }
 
-    // Dibujar etiquetas de ejes si hay datos
+    // Dibujar etiquetas usando TextMeasurer de Compose
+    val textStyle = TextStyle(
+        fontSize = 12.sp,
+        color = backgroundColor.copy(alpha = 0.7f),
+        fontWeight = FontWeight.Normal
+    )
+
+    // Etiquetas en X (solo algunas para evitar sobreposición)
     if (dataPoints.isNotEmpty()) {
-        // Etiquetas en X (simplificadas)
-        dataPoints.take(3).forEachIndexed { index, dataPoint ->
-            val x = padding + (index.toFloat() / 2) * chartWidth
-            drawContext.canvas.nativeCanvas.drawText(
-                dataPoint.label,
-                x,
-                padding + chartHeight + 20f,
-                android.graphics.Paint().apply {
-                    color = backgroundColor.copy(alpha = 0.7f).toArgb()
-                    textSize = 24f
-                    textAlign = android.graphics.Paint.Align.CENTER
-                }
-            )
+        val labelsToShow = when {
+            dataPoints.size <= 3 -> dataPoints.indices.toList()
+            dataPoints.size <= 7 -> listOf(0, dataPoints.size / 2, dataPoints.size - 1)
+            else -> listOf(0, dataPoints.size / 3, 2 * dataPoints.size / 3, dataPoints.size - 1)
+        }
+
+        labelsToShow.forEach { index ->
+            if (index < dataPoints.size && index < points.size) {
+                val dataPoint = dataPoints[index]
+                val textLayoutResult = textMeasurer.measure(
+                    text = dataPoint.label,
+                    style = textStyle
+                )
+
+                drawText(
+                    textLayoutResult = textLayoutResult,
+                    topLeft = Offset(
+                        points[index].x - textLayoutResult.size.width / 2,
+                        padding + chartHeight + 8f
+                    )
+                )
+            }
         }
 
         // Etiqueta Y máxima
-        drawContext.canvas.nativeCanvas.drawText(
-            "$maxSteps",
-            padding - 30f,
-            padding + 10f,
-            android.graphics.Paint().apply {
-                color = backgroundColor.copy(alpha = 0.7f).toArgb()
-                textSize = 20f
-                textAlign = android.graphics.Paint.Align.RIGHT
-            }
+        val maxStepsText = textMeasurer.measure(
+            text = "$maxSteps",
+            style = textStyle
+        )
+
+        drawText(
+            textLayoutResult = maxStepsText,
+            topLeft = Offset(
+                padding - maxStepsText.size.width - 8f,
+                padding - maxStepsText.size.height / 2
+            )
+        )
+
+        // Etiqueta Y media
+        val midStepsText = textMeasurer.measure(
+            text = "${maxSteps / 2}",
+            style = textStyle
+        )
+
+        drawText(
+            textLayoutResult = midStepsText,
+            topLeft = Offset(
+                padding - midStepsText.size.width - 8f,
+                padding + chartHeight / 2 - midStepsText.size.height / 2
+            )
+        )
+
+        // Etiqueta Y cero
+        val zeroText = textMeasurer.measure(
+            text = "0",
+            style = textStyle
+        )
+
+        drawText(
+            textLayoutResult = zeroText,
+            topLeft = Offset(
+                padding - zeroText.size.width - 8f,
+                padding + chartHeight - zeroText.size.height / 2
+            )
         )
     }
 }

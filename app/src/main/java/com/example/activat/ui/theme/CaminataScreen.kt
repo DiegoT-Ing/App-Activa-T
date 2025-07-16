@@ -122,7 +122,8 @@ fun CaminataScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background) // Fondo limpio blanco
             .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
+        verticalArrangement = Arrangement.spacedBy(20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
         // Título dinámico más limpio
@@ -136,26 +137,14 @@ fun CaminataScreen(
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = if (caminataActiva) {
-                        if (isPaused) "⏸️ Sesión Pausada" else "🏃‍♂️ ¡Caminando!"
+                        if (isPaused) "Sesión pausada" else "¡Caminando!"
                     } else {
                         "🚀 Listo para Caminar"
                     },
                     style = MaterialTheme.typography.headlineLarge,
                     fontWeight = FontWeight.Bold,
-                    color = if (caminataActiva && !isPaused) {
-                        FitnessGreen60
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
-                    }
+                    color = MaterialTheme.colorScheme.onSurface
                 )
-
-                if (caminataActiva) {
-                    Text(
-                        text = if (isPaused) "Toca Reanudar para continuar" else "¡Sigue así!",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
             }
         }
 
@@ -168,80 +157,69 @@ fun CaminataScreen(
             ) + fadeIn(animationSpec = tween(500, delayMillis = 100))
         ) {
             CleanCard(
-                borderColor = if (caminataActiva && !isPaused) FitnessGreen60 else TechBlue60
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "Progreso Total del Día",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    ProgressRing(
-                        progress = porcentajeMetaAlcanzado,
-                        size = 120.dp,
-                        strokeWidth = 10.dp,
-                        progressColor = if (caminataActiva && !isPaused) FitnessGreen60 else TechBlue60,
-                        backgroundColor = NeutralGray90
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Row { // <-- ¡Modificado! Ya NO lleva 'verticalAlignment = Alignment.Baseline'
-                            AnimatedCounter(
-                                targetValue = pasosTotalesDelDia,
-                                textStyle = MaterialTheme.typography.headlineMedium,
-                                color = if (caminataActiva && !isPaused) FitnessGreen60 else TechBlue60,
-                                modifier = Modifier.alignByBaseline() // <-- ¡Añadido!
-                            )
-                            Text(
-                                text = " pasos",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        Text(
-                            text = "Meta: ${usuarioData.metaPasosDiarios} pasos",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
-        }
-
-        // Métricas de la sesión actual - CENTRADO CORRECTAMENTE
-        if (caminataActiva) {
-            AnimatedVisibility(
-                visible = isVisible,
-                enter = slideInVertically(
-                    initialOffsetY = { it },
-                    animationSpec = tween(600, delayMillis = 200)
-                ) + fadeIn(animationSpec = tween(600, delayMillis = 200))
-            ) {
-                CleanCard(
-                    backgroundColor = if (isPaused) {
-                        EnergyOrange60.copy(alpha = 0.05f)
-                    } else {
-                        FitnessGreen60.copy(alpha = 0.05f)
-                    },
-                    borderColor = if (isPaused) EnergyOrange60 else FitnessGreen60
-                ) {
+                borderColor = if (caminataActiva && !isPaused) FitnessGreen60 else TechBlue60,
+                content = {
                     Column(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = "Sesión Actual",
+                            text = "Progreso total del día",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        ProgressRing(
+                            progress = porcentajeMetaAlcanzado,
+                            size = 120.dp,
+                            strokeWidth = 10.dp,
+                            progressColor = if (caminataActiva && !isPaused) FitnessGreen60 else TechBlue60,
+                            backgroundColor = MaterialTheme.colorScheme.onSurface
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Row { // <-- ¡Modificado! Ya NO lleva 'verticalAlignment = Alignment.Baseline'
+                                AnimatedCounter(
+                                    targetValue = pasosTotalesDelDia,
+                                    textStyle = MaterialTheme.typography.headlineMedium,
+                                    color = if (caminataActiva && !isPaused) FitnessGreen60 else TechBlue60,
+                                    modifier = Modifier.alignByBaseline() // <-- ¡Añadido!
+                                )
+                                Text(
+                                    text = " pasos",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Text(
+                                text = "Meta: ${usuarioData.metaPasosDiarios} pasos",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            )
+        }
+
+        // Métricas de la sesión actual - CENTRADO CORRECTAMENTE
+        if (caminataActiva) {
+            CleanCard(
+                borderColor = if (isPaused) EnergyOrange60 else TechBlue60,
+                content = {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Sesión actual",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold
                         )
@@ -295,6 +273,14 @@ fun CaminataScreen(
                         }
                     }
                 }
+            )
+            AnimatedVisibility(
+                visible = isVisible,
+                enter = slideInVertically(
+                    initialOffsetY = { it },
+                    animationSpec = tween(600, delayMillis = 200)
+                ) + fadeIn(animationSpec = tween(600, delayMillis = 200))
+            ) {
             }
         }
 
@@ -308,7 +294,7 @@ fun CaminataScreen(
         ) {
             if (!caminataActiva) {
                 PrimaryActionButton(
-                    text = "Iniciar Caminata",
+                    text = "Iniciar caminata",
                     onClick = {
                         haptic.start()
                         stepsAtStart = 0f
@@ -372,32 +358,33 @@ fun CaminataScreen(
                 enter = slideInVertically() + fadeIn()
             ) {
                 CleanCard(
+                    borderColor = EnergyOrange60,
                     backgroundColor = EnergyOrange60.copy(alpha = 0.05f),
-                    borderColor = EnergyOrange60
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "⏸️",
-                            style = MaterialTheme.typography.headlineSmall
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column {
+                    content = {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Text(
-                                text = "Sesión Pausada",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = EnergyOrange60
+                                text = "⏸️",
+                                style = MaterialTheme.typography.headlineSmall
                             )
-                            Text(
-                                text = "Presiona Reanudar para continuar tu progreso",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = "Sesión Pausada",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = EnergyOrange60
+                                )
+                                Text(
+                                    text = "Presiona Reanudar para continuar tu progreso",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                     }
-                }
+                )
             }
         }
     }
@@ -437,51 +424,52 @@ fun CaminataScreen(
             text = {
                 // Dialog de confirmación más limpio
                 CleanCard(
+                    borderColor = FitnessGreen60,
                     backgroundColor = FitnessGreen60.copy(alpha = 0.05f),
-                    borderColor = FitnessGreen60
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "Tu progreso se guardará automáticamente:",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceEvenly
+                    content = {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(
-                                    text = "$pasosEnSesionActual",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = FitnessGreen60
-                                )
-                                Text(
-                                    text = "pasos",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(
-                                    text = formatTime(tiempoSesionActual),
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = TechBlue60
-                                )
-                                Text(
-                                    text = "tiempo",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                            Text(
+                                text = "Tu progreso se guardará automáticamente:",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceEvenly
+                            ) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(
+                                        text = "$pasosEnSesionActual",
+                                        style = MaterialTheme.typography.titleLarge,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = FitnessGreen60
+                                    )
+                                    Text(
+                                        text = "pasos",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(
+                                        text = formatTime(tiempoSesionActual),
+                                        style = MaterialTheme.typography.titleLarge,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = TechBlue60
+                                    )
+                                    Text(
+                                        text = "tiempo",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
                             }
                         }
                     }
-                }
+                )
             },
             shape = RoundedCornerShape(16.dp)
         )

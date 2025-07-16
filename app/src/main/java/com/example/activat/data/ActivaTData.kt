@@ -10,7 +10,7 @@ data class UsuarioData(
     val edad: Int = 0,
     val estatura: Float = 0f, // en cm
     val peso: Float = 0f, // en kg
-    val metaPasosDiarios: Int = 6000
+    val metaPasosDiarios: Int = 7000
 )
 
 /**
@@ -32,15 +32,6 @@ data class SesionCaminata(
     val tiempoSegundos: Long = 0L,
     val distanciaKm: Float = 0f
 ) {
-    /**
-     * Calcula la distancia basada en pasos y estatura del usuario
-     */
-    fun calcularDistancia(estaturaUsuario: Float): Float {
-        // Fórmula aproximada: Zancada = estatura * 0.415
-        // Distancia = pasos * zancada / 100000 (para convertir a km)
-        val zancadaCm = estaturaUsuario * 0.415f
-        return (pasos * zancadaCm) / 100000f
-    }
 
     /**
      * Formato legible del tiempo
@@ -61,10 +52,3 @@ data class DatosDelDia(
     val sesionesRealizadas: Int = 0
 )
 
-/**
- * Configuración general de la aplicación
- */
-data class ConfiguracionApp(
-    val primerUso: Boolean = true,
-    val ultimaActualizacion: LocalDateTime = LocalDateTime.now()
-)

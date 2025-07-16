@@ -25,7 +25,6 @@ class ActivaTViewModel(private val repository: ActivaTRepository) : ViewModel() 
     val configuracionSalud: StateFlow<ConfiguracionSalud> = _configuracionSalud.asStateFlow()
 
     private val _datosDelDia = MutableStateFlow(DatosDelDia())
-    val datosDelDia: StateFlow<DatosDelDia> = _datosDelDia.asStateFlow()
 
     private val _historialSesiones = MutableStateFlow<List<SesionCaminata>>(emptyList())
     val historialSesiones: StateFlow<List<SesionCaminata>> = _historialSesiones.asStateFlow()
@@ -144,11 +143,6 @@ class ActivaTViewModel(private val repository: ActivaTRepository) : ViewModel() 
         _caminataActiva.value = true
         _pasosEnSesionActual.value = 0
         _tiempoSesionActual.value = 0L
-    }
-
-    fun pausarCaminata() {
-        // Por ahora solo cambiamos el estado
-        // La lógica de pausa/reanudación se maneja en la UI
     }
 
     fun detenerCaminata() {

@@ -1,23 +1,42 @@
 package com.example.activat.ui.theme
 
-import androidx.compose.animation.*
-import androidx.compose.animation.core.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
-import com.example.activat.ui.theme.components.*
-import com.example.activat.viewmodel.ActivaTViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavHostController
+import com.example.activat.ui.theme.components.CleanCard
+import com.example.activat.ui.theme.components.CompactMetric
+import com.example.activat.ui.theme.components.PrimaryActionButton
+import com.example.activat.ui.theme.components.ProgressRing
+import com.example.activat.ui.theme.components.rememberHapticFeedback
+import com.example.activat.viewmodel.ActivaTViewModel
 
 @Composable
 fun HomeScreen(
@@ -46,7 +65,8 @@ fun HomeScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background) // Fondo limpio blanco
             .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp) // Espaciado más compacto
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
         // Header limpio sin gradiente de fondo
@@ -69,54 +89,34 @@ fun HomeScreen(
             ) + fadeIn(animationSpec = tween(500, delayMillis = 100))
         ) {
             CleanCard(
-                backgroundColor = MaterialTheme.colorScheme.surface,
-                borderColor = FitnessGreen60
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "Progreso del Día",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row { // <-- ¡Modificado! Ya NO lleva 'verticalAlignment = Alignment.Baseline'
-                            AnimatedCounter(
-                                targetValue = pasosTotalesDelDia,
-                                textStyle = MaterialTheme.typography.headlineMedium,
-                                color = FitnessGreen60,
-                                modifier = Modifier.alignByBaseline() // <-- ¡Añadido!
-                            )
+                borderColor = FitnessGreen60,
+                content = {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = " pasos",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                text = "Progreso del día",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
-                        Text(
-                            text = "Meta: ${usuarioData.metaPasosDiarios} pasos",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        ProgressRing(
+                            progress = porcentajeMetaAlcanzado,
+                            size = 100.dp,
+                            strokeWidth = 6.dp,
+                            progressColor = MaterialTheme.colorScheme.onSurface,
+                            backgroundColor = MaterialTheme.colorScheme.onSurface,
                         )
                     }
-
-                    ProgressRing(
-                        progress = porcentajeMetaAlcanzado,
-                        size = 80.dp, // Más pequeño
-                        strokeWidth = 6.dp,
-                        progressColor = FitnessGreen60,
-                        backgroundColor = NeutralGray90
-                    )
                 }
-            }
+            )
         }
 
-        // Botón Principal limpio sin pulsación
+        // Botón Principal
         AnimatedVisibility(
             visible = isVisible,
             enter = slideInVertically(
@@ -125,7 +125,7 @@ fun HomeScreen(
             ) + fadeIn(animationSpec = tween(600, delayMillis = 200))
         ) {
             PrimaryActionButton(
-                text = "Iniciar Caminata",
+                text = "Iniciar caminata",
                 onClick = {
                     haptic.start()
                     viewModel.iniciarCaminata()
@@ -159,41 +159,44 @@ fun HomeScreen(
                 // Card Hoy
                 CleanCard(
                     modifier = Modifier.weight(1f),
-                    borderColor = FitnessGreen60,
-                    onClick = { haptic.light() }
-                ) {
-                    CompactMetric(
-                        label = "Hoy",
-                        value = "$pasosTotalesDelDia",
-                        color = FitnessGreen60
-                    )
-                }
+                    borderColor = EnergyOrange60,
+                    onClick = { haptic.light() },
+                    content = {
+                        CompactMetric(
+                            label = "Hoy",
+                            value = "$pasosTotalesDelDia",
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                )
 
                 // Card Meta
                 CleanCard(
                     modifier = Modifier.weight(1f),
-                    borderColor = TechBlue60,
-                    onClick = { haptic.light() }
-                ) {
-                    CompactMetric(
-                        label = "Meta",
-                        value = "${usuarioData.metaPasosDiarios}",
-                        color = TechBlue60
-                    )
-                }
+                    borderColor = EnergyOrange60,
+                    onClick = { haptic.light() },
+                    content = {
+                        CompactMetric(
+                            label = "Meta",
+                            value = "${usuarioData.metaPasosDiarios}",
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                )
 
                 // Card Restante
                 CleanCard(
                     modifier = Modifier.weight(1f),
                     borderColor = EnergyOrange60,
-                    onClick = { haptic.light() }
-                ) {
-                    CompactMetric(
-                        label = "Restante",
-                        value = "${(usuarioData.metaPasosDiarios - pasosTotalesDelDia).coerceAtLeast(0)}",
-                        color = EnergyOrange60
-                    )
-                }
+                    onClick = { haptic.light() },
+                    content = {
+                        CompactMetric(
+                            label = "Restante",
+                            value = "${(usuarioData.metaPasosDiarios - pasosTotalesDelDia).coerceAtLeast(0)}",
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                )
             }
         }
 
@@ -206,101 +209,85 @@ fun HomeScreen(
             ) + fadeIn(animationSpec = tween(800, delayMillis = 400))
         ) {
             CleanCard(
-                onClick = { haptic.light() }
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Última Actividad",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold
-                    )
-
-                    if (ultimaSesion != null) {
-                        Surface(
-                            color = FitnessGreen60.copy(alpha = 0.1f),
-                            shape = RoundedCornerShape(6.dp)
-                        ) {
-                            Text(
-                                text = "✓",
-                                modifier = Modifier.padding(6.dp),
-                                style = MaterialTheme.typography.labelLarge,
-                                color = FitnessGreen60
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                if (ultimaSesion != null) {
+                onClick = { haptic.light() },
+                content = {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        CleanCard(
-                            modifier = Modifier.weight(1f),
-                            backgroundColor = FitnessGreen60.copy(alpha = 0.05f),
-                            borderColor = FitnessGreen60
+                        Text(
+                            text = "Última actividad",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    if (ultimaSesion != null) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            CompactMetric(
-                                label = "Pasos",
-                                value = "${ultimaSesion!!.pasos}",
+                            CleanCard(
+                                modifier = Modifier.weight(1f),
+                                borderColor = TechBlue60
+                            ) {
+                                CompactMetric(
+                                    label = "Pasos",
+                                    value = "${ultimaSesion!!.pasos}",
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+
+                            CleanCard(
+                                modifier = Modifier.weight(1f),
+                                borderColor = TechBlue60
+                            ) {
+                                CompactMetric(
+                                    label = "Tiempo",
+                                    value = ultimaSesion!!.tiempoFormateado(),
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+
+                            CleanCard(
+                                modifier = Modifier.weight(1f),
+                                borderColor = TechBlue60
+                            ) {
+                                CompactMetric(
+                                    label = "Distancia",
+                                    value = "%.1f km".format(ultimaSesion!!.distanciaKm),
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+                    } else {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "🌟",
+                                style = MaterialTheme.typography.displayMedium
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "¡Tu primera aventura te espera!",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
                                 color = FitnessGreen60
                             )
-                        }
-
-                        CleanCard(
-                            modifier = Modifier.weight(1f),
-                            backgroundColor = TechBlue60.copy(alpha = 0.05f),
-                            borderColor = TechBlue60
-                        ) {
-                            CompactMetric(
-                                label = "Tiempo",
-                                value = ultimaSesion!!.tiempoFormateado(),
-                                color = TechBlue60
+                            Text(
+                                text = "Cada paso cuenta hacia una vida más saludable",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-
-                        CleanCard(
-                            modifier = Modifier.weight(1f),
-                            backgroundColor = EnergyOrange60.copy(alpha = 0.05f),
-                            borderColor = EnergyOrange60
-                        ) {
-                            CompactMetric(
-                                label = "Distancia",
-                                value = "%.1f km".format(ultimaSesion!!.distanciaKm),
-                                color = EnergyOrange60
-                            )
-                        }
-                    }
-                } else {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "🌟",
-                            style = MaterialTheme.typography.displayMedium
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "¡Tu primera aventura te espera!",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = FitnessGreen60
-                        )
-                        Text(
-                            text = "Cada paso cuenta hacia una vida más saludable",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
                     }
                 }
-            }
+            )
         }
 
         // Tip motivacional más sutil
@@ -316,37 +303,20 @@ fun HomeScreen(
     }
 }
 
+
 @Composable
 private fun CleanWelcomeHeader() {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column {
             Text(
-                text = "¡Hola! 👋",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = "¿Listo para activarte?",
-                style = MaterialTheme.typography.titleMedium,
-                color = FitnessGreen60,
-                fontWeight = FontWeight.Medium
-            )
-        }
-
-        // Icono simple sin animaciones
-        Surface(
-            color = FitnessGreen60.copy(alpha = 0.1f),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Text(
-                text = "🏃‍♂️",
+                text = "Activa - T",
                 style = MaterialTheme.typography.headlineLarge,
-                modifier = Modifier.padding(12.dp)
+                fontWeight = FontWeight.ExtraBold,
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
     }
@@ -365,14 +335,14 @@ private fun CleanMotivationalTip() {
     val randomTip = remember { tips.random() }
 
     CleanCard(
-        backgroundColor = MaterialTheme.colorScheme.surfaceVariant,
-        borderColor = MotivationPurple60
-    ) {
-        Text(
-            text = randomTip,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-            fontWeight = FontWeight.Medium
-        )
-    }
+        borderColor = MotivationPurple60,
+        content = {
+            Text(
+                text = randomTip,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.Medium
+            )
+        }
+    )
 }

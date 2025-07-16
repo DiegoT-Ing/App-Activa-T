@@ -32,10 +32,6 @@ class ActivaTRepository(private val context: Context) {
         val ACTIVIDAD_FISICA = stringPreferencesKey("actividad_fisica")
         val OBJETIVO_SALUD = stringPreferencesKey("objetivo_salud")
 
-        // Configuración
-        val PRIMER_USO = booleanPreferencesKey("primer_uso")
-        val ULTIMA_ACTUALIZACION = stringPreferencesKey("ultima_actualizacion")
-
         // Sesiones (formato JSON simplificado)
         val SESIONES_JSON = stringPreferencesKey("sesiones_json")
     }
@@ -103,15 +99,6 @@ class ActivaTRepository(private val context: Context) {
         }
     }
 
-    // Actualizar pasos acumulados del día
-    suspend fun actualizarPasosDelDia(nuevospasos: Int) {
-        context.dataStore.edit { preferences ->
-            val fechaActual = LocalDate.now().toString()
-            preferences[PreferencesKeys.FECHA_ACTUAL] = fechaActual
-            preferences[PreferencesKeys.PASOS_ACUMULADOS] = nuevospasos
-        }
-    }
-
     // Guardar nueva sesión
     suspend fun guardarSesion(sesion: SesionCaminata) {
         context.dataStore.edit { preferences ->
@@ -153,15 +140,11 @@ class ActivaTRepository(private val context: Context) {
                             tiempoSegundos = partes[2].toLong(),
                             distanciaKm = partes[3].toFloat()
                         )
-                    } catch (e: Exception) {
+                    } catch (_: Exception) {
                         null
                     }
                 }
             }
         }
 
-    // Limpiar datos (para testing)
-    suspend fun limpiarDatos() {
-        context.dataStore.edit { it.clear() }
-    }
 }
